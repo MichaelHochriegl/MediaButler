@@ -1,0 +1,41 @@
+name: Add a new bug report
+description: Create a detailed bug report
+labels: [bug]
+
+body:
+- type: dropdown
+  id: version
+  attributes:
+    label: Version
+    description: What version of MediaButler are you running?
+    options:
+      - pre v1.0.0
+  validations:
+    required: true
+
+- type: dropdown
+  id: area
+  attributes:
+    label: Area
+    description: What area does your feature belong to?
+    options:
+      - MovieLibrary
+      - TvShowLibrary
+      - Generic
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Describe the bug
+    description: A clear and concise description of what the bug is.
+  validations:
+    required: true
+
+- type: textarea
+  attributes:
+    label: Exceptions (if any)
+    description: Include the exception you get when facing this issue.
+    render: shell
+  validations:
+    required: false
