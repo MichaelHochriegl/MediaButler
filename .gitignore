@@ -1,0 +1,17 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+/.idea/.idea.MediaButler/.idea/encodings.xml
+/.idea/.idea.MediaButler/.idea/indexLayout.xml
+/.idea/.idea.MediaButler/.idea/misc.xml
+/.idea/.idea.MediaButler/.idea/vcs.xml
+# JetBrains Rider/ReSharper user-specific files
+*.DotSettings.user
+
+**/*.g.received.*
+
+node_modules
+docs/.vitepress/dist
+docs/.vitepress/cache
