@@ -10,6 +10,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\Backend\Backend.csproj" />
+      <ProjectReference Include="..\Frontend\Frontend.csproj" />
       <ProjectReference Include="..\ServiceDiscovery\ServiceDiscovery.csproj" IsAspireProjectResource="false" />
     </ItemGroup>
 
