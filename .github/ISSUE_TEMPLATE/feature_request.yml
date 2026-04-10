@@ -1,0 +1,85 @@
+name: Feature request
+description: Suggest an idea or improvement.
+title: "[Feature]: "
+labels:
+  - type:feature
+  - status:needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Suggest a feature or improvement for MediaButler.
+
+        Questions belong in Discussions.
+
+  - type: checkboxes
+    id: affected_modules
+    attributes:
+      label: Affected modules
+      description: Select all modules that seem relevant.
+      options:
+        - label: Libraries
+        - label: Movies
+        - label: TV Shows
+        - label: Scanning
+        - label: Virtual Libraries
+        - label: Scan Reports
+        - label: UI
+        - label: Infrastructure
+        - label: Documentation
+        - label: Multiple modules
+        - label: Not sure
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before you submit
+      options:
+        - label: I searched existing issues to avoid duplicates.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem description
+      placeholder: What is currently missing or inconvenient?
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      placeholder: What would you like MediaButler to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: value
+    attributes:
+      label: Why is this useful?
+      placeholder: What workflow does this improve?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Expected scope
+      options:
+        - Small improvement
+        - New workflow
+        - Large feature
+        - Not sure
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
