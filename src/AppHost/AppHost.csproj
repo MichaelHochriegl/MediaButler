@@ -8,4 +8,9 @@
         <UserSecretsId>ab4931ae-8899-4586-9819-ffeffda3f5cb</UserSecretsId>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Backend\Backend.csproj" />
+      <ProjectReference Include="..\ServiceDiscovery\ServiceDiscovery.csproj" IsAspireProjectResource="false" />
+    </ItemGroup>
+
 </Project>

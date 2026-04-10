@@ -1,7 +1,9 @@
 <Solution>
   <Folder Name="/src/">
     <Project Path="src/AppHost/AppHost.csproj" />
+    <Project Path="src/Backend/Backend.csproj" />
     <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
+    <Project Path="src/ServiceDiscovery/ServiceDiscovery.csproj" />
   </Folder>
   <Folder Name="/src/modules/" />
   <Folder Name="/tests/" />
