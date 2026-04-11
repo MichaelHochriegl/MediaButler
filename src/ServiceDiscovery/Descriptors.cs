@@ -7,6 +7,30 @@
 public static class Descriptors
 {
     /// <summary>
+    /// Represents the descriptor identifier for the "database-server" service
+    /// within the service discovery mechanism. This constant is used to uniquely
+    /// name and reference the database server when configuring distributed
+    /// applications or assigning service dependencies.
+    /// </summary>
+    public const string DatabaseServer = "database-server";
+
+    /// <summary>
+    /// Represents the descriptor identifier for the "database volume" resource
+    /// within the service discovery mechanism. This constant is used to uniquely
+    /// name and reference the data volume associated with the database server,
+    /// enabling persistent storage configuration in distributed applications.
+    /// </summary>
+    public const string DatabaseVolume = "database-volume";
+
+    /// <summary>
+    /// Represents the descriptor identifier for the "database" component within the
+    /// service discovery mechanism. This constant is used to uniquely name and
+    /// reference the specific database instance when configuring and interacting with
+    /// distributed application components.
+    /// </summary>
+    public const string Database = "database";
+    
+    /// <summary>
     /// Represents the descriptor identifier for the "backend" project component
     /// within the service discovery mechanism. This constant is used to uniquely
     /// name and reference the backend project when configuring distributed
