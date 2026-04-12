@@ -4,7 +4,7 @@ using Modules.Common;
 namespace Libraries.Backend;
 
 /// <summary>
-/// Provides an extension method for registering library modules in a host application builder.
+/// Registers library modules in a host application builder.
 /// </summary>
 public static class ModuleRegistration
 {
@@ -15,12 +15,10 @@ public static class ModuleRegistration
     extension(IHostApplicationBuilder builder)
     {
         /// <summary>
-        /// Registers the Libraries module by adding its assembly to the
-        /// collection of module assemblies in the application's descriptors and registering services.
+        /// Registers the Libraries module with the host application builder.
         /// </summary>
         /// <returns>
-        /// The updated <see cref="IHostApplicationBuilder"/> instance to allow
-        /// further configuration chaining.
+        /// The same <see cref="IHostApplicationBuilder"/> instance for chaining.
         /// </returns>
         public IHostApplicationBuilder RegisterLibrariesModule()
         {
