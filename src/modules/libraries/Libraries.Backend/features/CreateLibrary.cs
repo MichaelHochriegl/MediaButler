@@ -8,7 +8,6 @@ public class CreateLibraryEndpoint : Endpoint<CreateLibraryRequest>
     public override void Configure()
     {
         Post("/libraries");
-        
     }
     
     public override async Task HandleAsync(CreateLibraryRequest req, CancellationToken ct)
