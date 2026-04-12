@@ -12,6 +12,7 @@
   <Folder Name="/src/modules/libraries/">
     <Project Path="src/modules/libraries/Libraries.Backend/Libraries.Backend.csproj" />
     <Project Path="src/modules/libraries/Libraries.Contracts/Libraries.Contracts.csproj" />
+    <Project Path="src/modules/libraries/Libraries.Frontend/Libraries.Frontend.csproj" />
   </Folder>
   <Folder Name="/tests/" />
 </Solution>
