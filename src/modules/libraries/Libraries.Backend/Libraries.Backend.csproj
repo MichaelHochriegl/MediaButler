@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+      <PackageReference Include="FastEndpoints" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\Modules.Common\Modules.Common.csproj" />
+      <ProjectReference Include="..\Libraries.Contracts\Libraries.Contracts.csproj" />
+    </ItemGroup>
+
+</Project>
