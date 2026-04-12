@@ -1,4 +1,4 @@
-namespace Libraries.Contracts.features;
+namespace Libraries.Contracts.Features;
 
 public record CreateLibraryRequest(string Name)
 {

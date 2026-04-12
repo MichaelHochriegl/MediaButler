@@ -1,7 +1,7 @@
 using FastEndpoints;
-using Libraries.Contracts.features;
+using Libraries.Contracts.Features;
 
-namespace Libraries.Backend.features;
+namespace Libraries.Backend.Features;
 
 public class CreateLibraryEndpoint : Endpoint<CreateLibraryRequest>
 {
