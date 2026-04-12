@@ -24,7 +24,7 @@ public static class ModuleRegistration
         /// </returns>
         public IHostApplicationBuilder RegisterLibrariesModule()
         {
-            ModuleDescriptors.Assemblies
+            ModuleDescriptors.BackendAssemblies
                 .Add(typeof(ModuleRegistration).Assembly);
             
             return builder;

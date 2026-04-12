@@ -9,7 +9,7 @@ builder.RegisterLibrariesModule();
 
 builder.Services.AddFastEndpoints(options =>
 {
-    options.Assemblies = ModuleDescriptors.Assemblies;
+    options.Assemblies = ModuleDescriptors.BackendAssemblies;
 }).SwaggerDocument(options =>
 {
     options.DocumentSettings = s =>
