@@ -1,6 +1,9 @@
 using Frontend.Components;
+using Libraries.Frontend;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.RegisterLibrariesModule();
 
 builder.AddServiceDefaults();
 
