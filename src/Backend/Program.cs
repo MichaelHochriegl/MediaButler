@@ -1,11 +1,15 @@
+using Backend.Data;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Libraries.Backend;
 using Modules.Common;
+using ServiceDiscovery;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.RegisterLibrariesModule();
+
+builder.AddNpgsqlDbContext<AppDbContext>(Descriptors.Database);
 
 builder.Services.AddFastEndpoints(options =>
 {
