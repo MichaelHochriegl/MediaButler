@@ -15,7 +15,10 @@
     </MudAppBar>
     <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
-            
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudNavLink Href="/libraries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VideoLibrary">Libraries</MudNavLink>
+            <MudNavLink Href="/movies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Movie">Movies</MudNavLink>
+            <MudNavLink Href="/tv-shows" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LiveTv">TV-Shows</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
     <MudMainContent>
