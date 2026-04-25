@@ -12,7 +12,7 @@ public static class CustomIcons
     public const string Logo = """
                                <path fill="#111827"
                                      stroke="currentColor"
-                                     stroke-width="0.6"
+                                     stroke-width="1.0"
                                      stroke-linejoin="round"
                                      stroke-linecap="round"
                                      d="M2.6 7.7
@@ -25,7 +25,7 @@ public static class CustomIcons
 
                                <path fill="#111827"
                                      stroke="currentColor"
-                                     stroke-width="0.6"
+                                     stroke-width="1.0"
                                      stroke-linejoin="round"
                                      stroke-linecap="round"
                                      d="M21.4 7.7
@@ -38,7 +38,7 @@ public static class CustomIcons
 
                                <path fill="#f59e0b"
                                      stroke="currentColor"
-                                     stroke-width="0.6"
+                                     stroke-width="1.0"
                                      stroke-linejoin="round"
                                      stroke-linecap="round"
                                      d="M9.7 7.7
