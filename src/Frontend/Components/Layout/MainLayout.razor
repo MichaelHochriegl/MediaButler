@@ -1,6 +1,6 @@
 ﻿@inherits LayoutComponentBase
 
-<MudThemeProvider @bind-IsDarkMode="_isDarkMode"/>
+<MudThemeProvider Theme="MediaButlerTheme.Theme" @bind-IsDarkMode="_isDarkMode"/>
 <MudPopoverProvider />
 <MudDialogProvider />
 <MudSnackbarProvider />
@@ -11,7 +11,7 @@
         <MudIcon Icon="@CustomIcons.Logo" Size="Size.Large" Color="Color.Default"></MudIcon>
         <MudText Typo="Typo.h5">MediaButler</MudText>
         <MudSpacer />
-        <MudIconButton OnClick="SwitchTheme" Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"/>
+        <MudIconButton OnClick="SwitchTheme" Color="Color.Secondary" Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"/>
     </MudAppBar>
     <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
         <MudNavMenu>
