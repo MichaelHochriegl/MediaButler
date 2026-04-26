@@ -1,9 +1,47 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<MudThemeProvider Theme="MediaButlerTheme.Theme" @bind-IsDarkMode="_isDarkMode"/>
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
 
-<div id="blazor-error-ui" data-nosnippet>
-    An unhandled error has occurred.
-    <a href="." class="reload">Reload</a>
-    <span class="dismiss">🗙</span>
-</div>
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggled" />
+        <MudIcon Icon="@CustomIcons.Logo" Color="Color.Inherit" Size="Size.Large"></MudIcon>
+        <MudText Typo="Typo.h5">MediaButler</MudText>
+        <MudSpacer />
+        <MudIconButton OnClick="SwitchTheme" Color="Color.Inherit" Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"/>
+    </MudAppBar>
+    <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
+        <MudNavMenu>
+            <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
+            <MudNavLink Href="/libraries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VideoLibrary">Libraries</MudNavLink>
+            <MudNavLink Href="/movies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Movie">Movies</MudNavLink>
+            <MudNavLink Href="/tv-shows" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LiveTv">TV-Shows</MudNavLink>
+        </MudNavMenu>
+    </MudDrawer>
+    <MudMainContent>
+        <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+<BlazorErrorModal />
+
+@code
+{
+    private bool _isDarkMode = true;
+    private bool _drawerOpen = true;
+
+    private void SwitchTheme()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+
+    private void DrawerToggled()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+}
