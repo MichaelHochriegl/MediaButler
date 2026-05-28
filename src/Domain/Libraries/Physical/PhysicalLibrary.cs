@@ -6,6 +6,10 @@ public sealed class PhysicalLibrary : Library
 
     public IReadOnlyCollection<PhysicalLibrarySource> Sources => _sources.AsReadOnly();
 
+    private PhysicalLibrary()
+    {
+    }
+
     private PhysicalLibrary(LibraryName name, IEnumerable<PhysicalLibrarySource> sources)
         : base(name)
     {
@@ -24,11 +28,8 @@ public sealed class PhysicalLibrary : Library
         LibraryName name,
         IEnumerable<PhysicalLibrarySource> sources)
     {
-        var sourceEntities = sources
-            .Select(source => new PhysicalLibrarySource(source.MediaKind, source.Path))
-            .ToArray();
 
-        return new PhysicalLibrary(name, sourceEntities);
+        return new PhysicalLibrary(name, sources);
     }
 
     public void AddSource(LibraryMediaKind mediaKind, PhysicalPath path)

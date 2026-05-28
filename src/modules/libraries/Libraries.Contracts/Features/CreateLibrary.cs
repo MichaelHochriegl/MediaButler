@@ -1,11 +1,19 @@
 namespace Libraries.Contracts.Features;
 
-public record CreateLibraryRequest(string Name)
+public record CreateLibraryRequest(string Name, LibraryKind Kind, IEnumerable<Source> Sources);
+
+public record CreateLibraryResponse(Guid Id);
+
+public enum LibraryKind
 {
-    public string Name { get; init; } = Name;
+    Physical = 1,
+    Virtual = 2,
 }
 
-public record CreateLibraryResponse(Guid Id)
+public enum MediaKind
 {
-    public Guid Id { get; init; } = Id;
+    Movies = 1,
+    TvShows = 2,
 }
+
+public record Source(string Path, MediaKind Kind);

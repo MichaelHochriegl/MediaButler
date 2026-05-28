@@ -8,6 +8,11 @@ public abstract class Library
 
     public DateTimeOffset CreatedAt { get; private init; }
     public DateTimeOffset? UpdatedAt { get; private set; }
+
+    protected Library()
+    {
+        Name = null!;
+    }
     
     protected Library(LibraryName name)
     {

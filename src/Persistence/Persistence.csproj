@@ -1,0 +1,13 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    
+    <ItemGroup>
+        <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
+    </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\Domain\Domain.csproj" />
+      <ProjectReference Include="..\modules\libraries\Libraries.Persistence\Libraries.Persistence.csproj" />
+      <ProjectReference Include="..\modules\Modules.Common\Modules.Common.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -2,7 +2,7 @@ namespace Domain.Libraries;
 
 public sealed record LibraryName
 {
-    private const int MaxLength = 100;
+    public const int MaxLength = 100;
     
     public string Value { get; }
     
