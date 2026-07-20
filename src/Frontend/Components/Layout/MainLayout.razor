@@ -6,22 +6,22 @@
 <MudSnackbarProvider />
 
 <MudLayout>
-    <MudAppBar Elevation="1">
+    <MudAppBar Elevation="0" Class="mb-appbar">
         <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggled" />
         <MudIcon Icon="@CustomIcons.Logo" Color="Color.Inherit" Size="Size.Large"></MudIcon>
         <MudText Typo="Typo.h5">MediaButler</MudText>
         <MudSpacer />
         <MudIconButton OnClick="SwitchTheme" Color="Color.Inherit" Icon="@(_isDarkMode ? Icons.Material.Filled.LightMode : Icons.Material.Filled.DarkMode)"/>
     </MudAppBar>
-    <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="2">
-        <MudNavMenu>
+    <MudDrawer Open="@_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="0" Class="mb-drawer">
+        <MudNavMenu Class="mb-navigation my-2">
             <MudNavLink Href="/" Match="NavLinkMatch.All" Icon="@Icons.Material.Filled.Dashboard">Dashboard</MudNavLink>
             <MudNavLink Href="/libraries" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.VideoLibrary">Libraries</MudNavLink>
             <MudNavLink Href="/movies" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Movie">Movies</MudNavLink>
             <MudNavLink Href="/tv-shows" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.LiveTv">TV-Shows</MudNavLink>
         </MudNavMenu>
     </MudDrawer>
-    <MudMainContent>
+    <MudMainContent Class="mb-page-surface">
         <MudContainer MaxWidth="MaxWidth.ExtraExtraLarge">
             @Body
         </MudContainer>
