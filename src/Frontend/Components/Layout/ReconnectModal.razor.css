@@ -98,7 +98,6 @@
     flex: 0 0 auto;
     color: var(--mud-palette-primary);
     background: rgba(var(--mud-palette-primary-rgb, 197, 82, 26), 0.12);
-    border: 1px solid rgba(197, 82, 26, 0.3);
     border-color: rgba(var(--mud-palette-primary-rgb, 197, 82, 26), 0.3);
     border-radius: var(--mud-default-borderradius);
 }
@@ -107,14 +106,12 @@
 #components-reconnect-modal.components-reconnect-resume-failed .components-reconnect-status {
     color: var(--mud-palette-error);
     background: rgba(var(--mud-palette-error-rgb, 248, 113, 113), 0.12);
-    border-color: rgba(248, 113, 113, 0.32);
     border-color: rgba(var(--mud-palette-error-rgb, 248, 113, 113), 0.32);
 }
 
 #components-reconnect-modal.components-reconnect-paused .components-reconnect-status {
     color: var(--mud-palette-secondary);
     background: rgba(var(--mud-palette-secondary-rgb, 145, 164, 183), 0.12);
-    border-color: rgba(145, 164, 183, 0.32);
     border-color: rgba(var(--mud-palette-secondary-rgb, 145, 164, 183), 0.32);
 }
 
@@ -198,7 +195,6 @@
 }
 
 .components-reconnect-action:focus-visible {
-    outline: 2px solid rgba(197, 82, 26, 0.48);
     outline: 2px solid rgba(var(--mud-palette-primary-rgb, 197, 82, 26), 0.48);
     outline-offset: 2px;
 }
