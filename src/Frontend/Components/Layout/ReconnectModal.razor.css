@@ -220,10 +220,6 @@
     animation: components-rejoining-animation 820ms linear infinite;
 }
 
-.components-rejoining-animation div {
-    display: none;
-}
-
 @keyframes components-reconnect-modal-enter {
     from {
         opacity: 0;
