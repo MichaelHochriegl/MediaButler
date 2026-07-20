@@ -97,8 +97,8 @@
     height: 2.625rem;
     flex: 0 0 auto;
     color: var(--mud-palette-primary);
-    background: rgba(var(--mud-palette-primary-rgb, 197, 82, 26), 0.12);
-    border-color: rgba(var(--mud-palette-primary-rgb, 197, 82, 26), 0.3);
+    background: rgba(var(--mud-palette-primary-rgb, 255, 138, 76), 0.12);
+    border: 0 rgba(var(--mud-palette-primary-rgb, 255, 138, 76), 0.3);
     border-radius: var(--mud-default-borderradius);
 }
 
@@ -195,7 +195,7 @@
 }
 
 .components-reconnect-action:focus-visible {
-    outline: 2px solid rgba(var(--mud-palette-primary-rgb, 197, 82, 26), 0.48);
+    outline: 2px solid rgba(var(--mud-palette-primary-rgb, 255, 138, 76), 0.48);
     outline-offset: 2px;
 }
 
