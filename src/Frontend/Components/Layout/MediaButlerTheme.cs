@@ -13,7 +13,7 @@ public static class MediaButlerTheme
 
             // Brand
             Primary = "#FF8A4C",
-            PrimaryContrastText = "#FFFFFF",
+            PrimaryContrastText = "#211009",
 
             // Calm steel tone for secondary actions
             Secondary = "#52657A",
