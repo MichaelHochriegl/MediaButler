@@ -66,7 +66,7 @@ h1:focus {
 }
 
 .mb-navigation .mud-nav-link.active {
-    background: rgba(var(--mud-palette-primary-rgb), 0.11) !important;
+    background: rgba(var(--mud-palette-primary-rgb, 255, 138, 76), 0.11) !important;
     color: var(--mud-palette-primary);
     font-weight: 600;
 }
