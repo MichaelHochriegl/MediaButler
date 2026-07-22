@@ -10,44 +10,24 @@ public static class CustomIcons
     /// Represents the SVG path definition for the MediaButler logo icon.
     /// </summary>
     public const string Logo = """
-                               <path fill="#111827"
-                                     stroke="currentColor"
-                                     stroke-width="1.0"
-                                     stroke-linejoin="round"
-                                     stroke-linecap="round"
-                                     d="M2.6 7.7
-                                        C2.6 6.8 3.5 6.3 4.3 6.7
-                                        L9.7 9.3
-                                        C10.4 9.7 10.4 14.3 9.7 14.7
-                                        L4.3 17.3
-                                        C3.5 17.7 2.6 17.2 2.6 16.3
-                                        Z" />
-
-                               <path fill="#111827"
-                                     stroke="currentColor"
-                                     stroke-width="1.0"
-                                     stroke-linejoin="round"
-                                     stroke-linecap="round"
-                                     d="M21.4 7.7
-                                        C21.4 6.8 20.5 6.3 19.7 6.7
-                                        L14.3 9.3
-                                        C13.6 9.7 13.6 14.3 14.3 14.7
-                                        L19.7 17.3
-                                        C20.5 17.7 21.4 17.2 21.4 16.3
-                                        Z" />
-
-                               <path fill="#f59e0b"
-                                     stroke="currentColor"
-                                     stroke-width="1.0"
-                                     stroke-linejoin="round"
-                                     stroke-linecap="round"
-                                     d="M9.7 7.7
-                                        C9.7 6.8 10.7 6.3 11.5 6.8
-                                        L15.8 11.2
-                                        C16.2 11.6 16.2 12.4 15.8 12.8
-                                        L11.5 17.2
-                                        C10.7 17.7 9.7 17.2 9.7 16.3
-                                        Z" />
+                               <path
+                                 fill="#FF8A4C"
+                                 d="M2.35 6.65 c0 -1.2 1.3 -1.95 2.35 -1.35 L11 9 v6 L4.7 18.7 c-1.05 .6 -2.35 -.15 -2.35 -1.35 V6.65 Z"
+                               />
+                               <path
+                                 fill="#FF8A4C"
+                                 fill-opacity="0.88"
+                                 d="M21.65 6.65 c0 -1.2 -1.3 -1.95 -2.35 -1.35 L13 9 v6 l6.3 3.7 c1.05 .6 2.35 -.15 2.35 -1.35 V6.65 Z"
+                               />
+                               <circle
+                                 cx="12"
+                                 cy="12"
+                                 r="5.1"
+                                 fill="#FFFFFF"
+                                 stroke="#FF8A4C"
+                                 stroke-width="1"
+                               />
+                               <path fill="#FF8A4C" d="M10.5 9.2 15 12l-4.5 2.8V9.2Z" />
                                """;
     
 }
