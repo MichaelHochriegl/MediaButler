@@ -23,6 +23,7 @@ builder.Services
 builder.Services.AddFastEndpoints(options =>
 {
     options.Assemblies = ModuleDescriptors.BackendAssemblies;
+    options.IncludeAbstractValidators = true;
 }).SwaggerDocument(options =>
 {
     options.DocumentSettings = s =>

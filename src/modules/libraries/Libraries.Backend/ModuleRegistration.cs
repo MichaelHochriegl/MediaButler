@@ -1,4 +1,5 @@
-﻿using Libraries.Persistence;
+﻿using Libraries.Contracts.Features.Physical;
+using Libraries.Persistence;
 using Microsoft.Extensions.Hosting;
 using Modules.Common;
 
@@ -27,6 +28,8 @@ public static class ModuleRegistration
                 .Add(typeof(ModuleRegistration).Assembly);
             ModuleDescriptors.PersistenceAssemblies
                 .Add(typeof(LibrariesDb).Assembly);
+            ModuleDescriptors.ContractAssemblies
+                .Add(typeof(CreatePhysicalLibraryRequest).Assembly);
             
             return builder;
         }

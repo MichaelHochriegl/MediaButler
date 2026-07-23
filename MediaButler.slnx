@@ -18,4 +18,8 @@
     <Project Path="src/modules/libraries/Libraries.Persistence/Libraries.Persistence.csproj" />
   </Folder>
   <Folder Name="/tests/" />
+  <Folder Name="/tests/modules/" />
+  <Folder Name="/tests/modules/libraries/">
+    <Project Path="tests/modules/libraries/Libraries.Backend.Tests.Integration/Libraries.Backend.Tests.Integration.csproj" />
+  </Folder>
 </Solution>
