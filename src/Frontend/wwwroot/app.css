@@ -36,3 +36,47 @@ h1:focus {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
     text-align: start;
 }
+
+.mb-appbar {
+    border-bottom: 1px solid var(--mud-palette-lines-default);
+}
+
+.mb-drawer {
+    border-right: 1px solid var(--mud-palette-lines-default);
+}
+
+.mb-page-surface {
+    background: var(--mud-palette-background);
+}
+
+.mb-card {
+    border: 1px solid var(--mud-palette-lines-default);
+    box-shadow: none;
+}
+
+.mb-navigation .mud-nav-link {
+    margin: 2px 8px;
+    border-radius: 8px;
+    color: var(--mud-palette-text-secondary);
+}
+
+.mb-navigation .mud-nav-link:hover {
+    background: var(--mud-palette-action-default-hover);
+    color: var(--mud-palette-text-primary);
+}
+
+.mb-navigation .mud-nav-link.active {
+    background: rgba(var(--mud-palette-primary-rgb, 255, 138, 76), 0.11) !important;
+    color: var(--mud-palette-primary);
+    font-weight: 600;
+}
+
+.mb-navigation .mud-nav-link.active::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    width: 3px;
+    height: 20px;
+    border-radius: 0 3px 3px 0;
+    background: var(--mud-palette-primary);
+}
