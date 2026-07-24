@@ -56,12 +56,6 @@ public sealed class PhysicalLibrary : Library
 
     private void AddSourceInternal(PhysicalLibrarySource source)
     {
-        if (_sources.Any(x => x.MediaKind != source.MediaKind && x.Path == source.Path))
-        {
-            throw new InvalidOperationException(
-                $"The physical library already has the path '{source.Path.Value}' assigned for the media kind '{source.MediaKind}'");
-        }
-
         if (_sources.Any(x => x.Path == source.Path))
         {
             throw new InvalidOperationException(
