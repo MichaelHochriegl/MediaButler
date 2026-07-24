@@ -38,12 +38,6 @@ public sealed record PhysicalPath
     {
         var trimmed = value.Trim();
 
-        while (trimmed.Length > 1 &&
-               (trimmed.EndsWith('/') || trimmed.EndsWith('\\')))
-        {
-            trimmed = trimmed[..^1];
-        }
-
-        return trimmed;
+        return Path.TrimEndingDirectorySeparator(trimmed);
     }
 }
