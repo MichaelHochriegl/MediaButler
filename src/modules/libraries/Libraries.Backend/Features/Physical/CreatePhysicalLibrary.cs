@@ -34,7 +34,7 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext) : Endpoint<Cr
         }
 
         var library = PhysicalLibrary.Create(new LibraryName(req.Name),
-            req.Sources.Select(s => new PhysicalLibrarySource(Enum.Parse<LibraryMediaKind>(s.Kind.ToString()),
+            req.Sources.Select(s => new PhysicalLibrarySource((LibraryMediaKind)s.Kind,
                 new PhysicalPath(s.Path))));
         
         dbContext.Add(library);
