@@ -38,13 +38,11 @@ public sealed class PhysicalLibrary : Library
         MarkUpdated();
     }
 
-    public void RemoveSource(LibraryMediaKind mediaKind)
+    public void RemoveSource(PhysicalLibrarySource source)
     {
-        var source = _sources.SingleOrDefault(x => x.MediaKind == mediaKind);
-
-        if (source is null)
+        if (!_sources.Contains(source))
         {
-            return;
+            throw new InvalidOperationException("The given source is not part of this library");
         }
 
         if (_sources.Count == 1)
