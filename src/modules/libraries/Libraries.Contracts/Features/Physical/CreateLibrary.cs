@@ -43,7 +43,16 @@ public class CreatePhysicalLibraryRequestValidator : AbstractValidator<CreatePhy
 {
     public CreatePhysicalLibraryRequestValidator()
     {
-        RuleFor(x => x.Sources).NotEmpty();
+        // TODO: Think about how to have the `LibraryName.MaxLength` accesible/shared
+        RuleFor(x => x.Name)
+            .NotEmpty()
+            .MaximumLength(100);
+        
+        RuleFor(x => x.Sources)
+            .NotEmpty();
+        
+        RuleForEach(x => x.Sources)
+            .SetValidator(new CreatePhysicalLibrarySourceValidator());
     }
 }
 

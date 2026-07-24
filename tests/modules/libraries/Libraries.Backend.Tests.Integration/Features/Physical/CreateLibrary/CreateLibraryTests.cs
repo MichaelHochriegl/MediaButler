@@ -38,12 +38,34 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         response.Headers.Location.Should().NotBeNull();
         response.Headers.Location!.ToString().Should().Be($"/api/libraries/{result.Id}");
     }
+    
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task Given_LibraryWithInvalidName_Should_ReturnBadRequest(string invalidName)
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest(invalidName,
+            [new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies)]);
+
+        // Act
+        var (response, problemDetails) =
+            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
+                request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().ContainSingle(error =>
+            error.Name == "name" &&
+            error.Reason == "'name' must not be empty.");
+    }
 
     [Fact]
     public async Task Given_LibraryWithSameNameAlreadyExists_Should_ReturnBadRequest()
     {
         // Arrange
-        var request = new CreatePhysicalLibraryRequest("Duplicate Physical Library ",
+        var request = new CreatePhysicalLibraryRequest("Duplicate Physical Library",
             [new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies)]);
 
         var (createResponse, _) =
