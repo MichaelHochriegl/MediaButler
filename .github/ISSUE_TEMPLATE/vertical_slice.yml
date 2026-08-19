@@ -1,15 +1,21 @@
-name: Feature slice
-description: Implement a complete vertical feature slice
-title: "[Slice]: "
+name: Implementation task
+description: Track a small implementation task that should normally fit in one reviewable pull request
+title: ""
 labels:
-  - type:feature-slice
+  - type:feature
   - status:ready
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep implementation tasks focused and independently mergeable.
+        A task does not need to span persistence, API, UI, and every test layer.
+
   - type: checkboxes
     id: affected_modules
     attributes:
       label: Affected modules
-      description: Select all modules this slice touches.
+      description: Select all modules this task touches.
       options:
         - label: Libraries
         - label: Movies
@@ -27,10 +33,10 @@ body:
     id: goal
     attributes:
       label: Goal
-      description: Describe what the user can do after this slice is completed.
+      description: Describe the concrete outcome of this task.
       placeholder: |
         Example:
-        User can create a physical library from the UI and see it in the libraries overview.
+        Expose the list of libraries through the API for use by the libraries overview.
     validations:
       required: true
 
@@ -38,28 +44,12 @@ body:
     id: done_when
     attributes:
       label: Done when
-      description: Describe the observable completion criteria.
+      description: Describe the observable completion criteria for this task only.
       placeholder: |
         Example:
-        - Entity persisted correctly
-        - Endpoint implemented
-        - UI implemented
-        - Validation rules applied
-        - Unit tests included
-        - Integration tests included
-    validations:
-      required: true
-
-  - type: textarea
-    id: scope
-    attributes:
-      label: Scope
-      description: Describe what is included in this slice.
-      placeholder: |
-        Example:
-        - Physical library creation only
-        - API + UI parity required
-        - Persistence included
+        - GET /libraries returns the required overview data
+        - Empty results are handled correctly
+        - Integration tests cover the endpoint
     validations:
       required: true
 
@@ -67,12 +57,15 @@ body:
     id: out_of_scope
     attributes:
       label: Out of scope
-      description: Describe what is intentionally excluded.
-      placeholder: |
-        Example:
-        - Scan execution
-        - Virtual libraries
-        - Metadata parsing
+      description: Describe related work that is intentionally excluded.
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Link issues or prerequisites that must be completed first, if any.
     validations:
       required: false
 
