@@ -2,7 +2,7 @@ namespace Domain.Libraries;
 
 public abstract class Library
 {
-    public LibraryId Id { get; private init; }
+    public Guid Id { get; private init; }
     public LibraryName Name { get; private set; }
     
 
@@ -16,7 +16,7 @@ public abstract class Library
     
     protected Library(LibraryName name)
     {
-        Id = LibraryId.New();
+        Id = Guid.CreateVersion7();
         Name = name;
         CreatedAt = DateTimeOffset.UtcNow;
     }
@@ -33,18 +33,4 @@ public abstract class Library
     }
     
     protected void MarkUpdated() => UpdatedAt = DateTimeOffset.UtcNow;
-}
-
-public readonly record struct LibraryId(Guid Value)
-{
-    public static LibraryId New() => new(Guid.CreateVersion7());
-    public static LibraryId From(Guid value)
-    {
-        return value == Guid.Empty
-            ? throw new ArgumentException("LibraryId cannot be empty",
-                nameof(value))
-            : new LibraryId(value);
-    }
-    
-    public override string ToString() => Value.ToString();
 }

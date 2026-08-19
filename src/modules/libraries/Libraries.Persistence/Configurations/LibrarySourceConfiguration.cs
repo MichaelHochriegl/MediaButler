@@ -11,16 +11,10 @@ public class LibrarySourceConfiguration : IEntityTypeConfiguration<LibrarySource
     {
         builder.HasKey(x => x.Id);
 
-        builder.Property<LibraryId>("library_id")
-            .HasConversion(
-                id => id.Value,
-                value => LibraryId.From(value))
+        builder.Property<Guid>("library_id")
             .IsRequired();
 
         builder.Property(x => x.Id)
-            .HasConversion(
-                id => id.Value,
-                value => LibrarySourceId.From(value))
             .ValueGeneratedNever();
 
         builder.Property(x => x.MediaKind)

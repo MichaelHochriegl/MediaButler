@@ -40,7 +40,7 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext) : Endpoint<Cr
         dbContext.Add(library);
         await dbContext.SaveChangesAsync(ct);
 
-        await Send.CreatedAtAsync<GetLibraryByIdEndpoint>(new { id = library.Id.Value },
-            new CreatePhysicalLibraryResponse(library.Id.Value), cancellation: ct);
+        await Send.CreatedAtAsync<GetLibraryByIdEndpoint>(new { id = library.Id },
+            new CreatePhysicalLibraryResponse(library.Id), cancellation: ct);
     }
 }

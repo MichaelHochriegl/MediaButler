@@ -12,9 +12,6 @@ public class LibraryConfiguration : IEntityTypeConfiguration<Library>
         builder.HasKey(x => x.Id);
 
         builder.Property(x => x.Id)
-            .HasConversion(
-                id => id.Value,
-                value => LibraryId.From(value))
             .ValueGeneratedNever();
 
         builder.Property(x => x.Name)
