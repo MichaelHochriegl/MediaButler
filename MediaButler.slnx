@@ -17,7 +17,9 @@
     <Project Path="src/modules/libraries/Libraries.Frontend/Libraries.Frontend.csproj" />
     <Project Path="src/modules/libraries/Libraries.Persistence/Libraries.Persistence.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Domain.Tests.Unit/Domain.Tests.Unit.csproj" />
+  </Folder>
   <Folder Name="/tests/modules/" />
   <Folder Name="/tests/modules/libraries/">
     <Project Path="tests/modules/libraries/Libraries.Backend.Tests.Integration/Libraries.Backend.Tests.Integration.csproj" />
