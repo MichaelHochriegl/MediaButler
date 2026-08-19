@@ -1,9 +1,13 @@
 using System.Net;
 using AwesomeAssertions;
+using Domain.Libraries;
 using FastEndpoints;
 using FastEndpoints.Testing;
 using Libraries.Backend.Features.Physical;
 using Libraries.Contracts.Features.Physical;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Persistence;
 
 namespace Libraries.Backend.Tests.Integration.Features.Physical.CreateLibrary;
 
@@ -37,6 +41,38 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         result.Id.Should().NotBeEmpty();
         response.Headers.Location.Should().NotBeNull();
         response.Headers.Location!.ToString().Should().Be($"/api/libraries/{result.Id}");
+    }
+
+    [Fact]
+    public async Task Given_MultipleSourcesWithSameMediaKind_Should_CreateLibrary()
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest("Multi-Source Movie Library",
+        [
+            new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies),
+            new CreatePhysicalLibrarySource("//mnt/movies-archive", MediaKind.Movies),
+        ]);
+
+        // Act
+        var (response, result) =
+            await app.Client
+                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(
+                    request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // TODO: use the proper endpoints once they are in place, assert with DbContext is just a temp solution
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var library = await db.Libs.PhysicalLibraries
+            .Include(l => l.Sources)
+            .SingleAsync(l => l.Id == result.Id, cancellationToken: TestContext.Current.CancellationToken);
+
+        library.Sources.Should().HaveCount(2);
+        library.Sources.Should().OnlyContain(source => source.MediaKind == LibraryMediaKind.Movies);
+        library.Sources.Select(source => source.Path.Value)
+            .Should().BeEquivalentTo("//mnt/movies", "//mnt/movies-archive");
     }
     
     [Theory]

@@ -29,8 +29,7 @@ public class LibrarySourceConfiguration : IEntityTypeConfiguration<LibrarySource
         builder.Property(x => x.CreatedAt)
             .IsRequired();
 
-        builder.HasIndex("library_id", nameof(LibrarySource.MediaKind))
-            .IsUnique();
+        builder.HasIndex("library_id", nameof(LibrarySource.MediaKind));
 
         builder.HasDiscriminator<string>("kind")
             .HasValue<PhysicalLibrarySource>("physical");
