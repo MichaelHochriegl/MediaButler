@@ -1,6 +1,6 @@
 name: Implementation task
 description: Track a small implementation task that should normally fit in one reviewable pull request
-title: ""
+title: "[Task]: "
 labels:
   - type:feature
   - status:ready
