@@ -22,7 +22,7 @@ builder.Services
 
 builder.Services.AddFastEndpoints(options =>
 {
-    options.Assemblies = ModuleDescriptors.BackendAssemblies;
+    options.Assemblies = [.. ModuleDescriptors.BackendAssemblies, .. ModuleDescriptors.ContractAssemblies];
     options.IncludeAbstractValidators = true;
 }).SwaggerDocument(options =>
 {
