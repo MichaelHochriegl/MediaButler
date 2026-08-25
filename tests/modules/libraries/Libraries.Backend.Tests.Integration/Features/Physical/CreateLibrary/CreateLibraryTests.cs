@@ -156,4 +156,57 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
         problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources");
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    public async Task Given_SourceWithInvalidPath_Should_ReturnBadRequest(string invalidPath)
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest("Physical Library",
+            [new CreatePhysicalLibrarySource(invalidPath, MediaKind.Movies)]);
+
+        // Act
+        var (response, problemDetails) =
+            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
+                request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0].path");
+    }
+
+    [Fact]
+    public async Task Given_SourceWithPathExceedingMaximumLength_Should_ReturnBadRequest()
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest("Physical Library",
+            [new CreatePhysicalLibrarySource(new string('a', 1025), MediaKind.Movies)]);
+
+        // Act
+        var (response, problemDetails) =
+            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
+                request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0].path");
+    }
+
+    [Fact]
+    public async Task Given_SourceWithUnknownMediaKind_Should_ReturnBadRequest()
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest("Physical Library",
+            [new CreatePhysicalLibrarySource("//mnt/movies", (MediaKind)999)]);
+
+        // Act
+        var (response, problemDetails) =
+            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
+                request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0].kind");
+    }
 }

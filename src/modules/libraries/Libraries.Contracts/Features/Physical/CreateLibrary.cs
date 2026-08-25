@@ -58,9 +58,16 @@ public class CreatePhysicalLibraryRequestValidator : AbstractValidator<CreatePhy
 
 public class CreatePhysicalLibrarySourceValidator : AbstractValidator<CreatePhysicalLibrarySource>
 {
+    private const int PhysicalPathMaxLength = 1024;
+
     public CreatePhysicalLibrarySourceValidator()
     {
+        RuleFor(x => x).NotNull();
         RuleFor(x => x.Path)
-            .NotEmpty();
+            .NotEmpty()
+            .MaximumLength(PhysicalPathMaxLength);
+
+        RuleFor(x => x.Kind)
+            .IsInEnum();
     }
 }
