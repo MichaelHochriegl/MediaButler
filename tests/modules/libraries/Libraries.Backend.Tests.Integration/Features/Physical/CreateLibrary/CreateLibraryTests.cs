@@ -229,6 +229,7 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
+    [InlineData("\0")]
     public async Task Given_SourceWithInvalidPath_Should_ReturnBadRequest(string invalidPath)
     {
         // Arrange
