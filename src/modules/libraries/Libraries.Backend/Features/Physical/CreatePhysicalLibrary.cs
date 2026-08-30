@@ -1,9 +1,9 @@
 using Domain.Libraries;
 using Domain.Libraries.Physical;
 using FastEndpoints;
-using Libraries.Contracts.Features;
 using Libraries.Contracts.Features.Physical;
 using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Persistence;
 
 namespace Libraries.Backend.Features.Physical;
@@ -36,9 +36,30 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext) : Endpoint<Cr
         var library = PhysicalLibrary.Create(new LibraryName(req.Name),
             req.Sources.Select(s => new PhysicalLibrarySource((LibraryMediaKind)s.Kind,
                 new PhysicalPath(s.Path))));
-        
-        dbContext.Add(library);
-        await dbContext.SaveChangesAsync(ct);
+
+        try
+        {
+            dbContext.Add(library);
+            await dbContext.SaveChangesAsync(ct);
+        }
+        catch (DbUpdateException e) when (e.InnerException is PostgresException
+                                          {
+                                              SqlState: PostgresErrorCodes.UniqueViolation,
+                                              ConstraintName: "IX_Library_Name"
+                                          })
+        {
+            ThrowError(r => r.Name, $"Library with the name '{req.Name}' already present");
+            return;
+        }
+        catch (DbUpdateException e) when (e.InnerException is PostgresException
+                                          {
+                                              SqlState: PostgresErrorCodes.UniqueViolation,
+                                              ConstraintName: "IX_LibrarySource_Path"
+                                          })
+        {
+            ThrowError(r => r.Sources, "One or more sources paths are already managed by another library");
+            return;
+        }
 
         await Send.CreatedAtAsync<GetLibraryByIdEndpoint>(new { id = library.Id },
             new CreatePhysicalLibraryResponse(library.Id), cancellation: ct);

@@ -124,6 +124,58 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
     }
 
     [Fact]
+    public async Task Given_ConcurrentRequestsWithSameName_Should_CreateOneLibraryAndRejectTheOthers()
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest("Concurrent Physical Library",
+            [new CreatePhysicalLibrarySource("//mnt/concurrent-movies", MediaKind.Movies)]);
+
+        // Act
+        var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(async _ =>
+        {
+            var (response, _) =
+                await app.Client
+                    .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+            return response.StatusCode;
+        }));
+
+        // Assert
+        responses.Should().ContainSingle(status => status == HttpStatusCode.Created);
+        responses.Should().HaveCount(4);
+        responses.Should().OnlyContain(status =>
+            status == HttpStatusCode.Created || status == HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Given_SourcePathIsManagedByAnotherLibrary_Should_ReturnBadRequest()
+    {
+        // Arrange
+        var existingLibrary = new CreatePhysicalLibraryRequest("Movies",
+            [new CreatePhysicalLibrarySource("//mnt/shared-movies", MediaKind.Movies)]);
+        var newLibrary = new CreatePhysicalLibraryRequest("Archive Movies",
+            [new CreatePhysicalLibrarySource("//mnt/shared-movies", MediaKind.Movies)]);
+
+        var (createResponse, _) =
+            await app.Client
+                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(
+                    existingLibrary);
+        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        // Act
+        var (response, problemDetails) =
+            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
+                newLibrary);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().ContainSingle(error =>
+            error.Name == "sources" &&
+            error.Reason == "One or more sources paths are already managed by another library");
+    }
+
+    [Fact]
     public async Task Given_NoSources_Should_ReturnBadRequest()
     {
         // Arrange
