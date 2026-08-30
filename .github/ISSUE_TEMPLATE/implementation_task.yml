@@ -1,0 +1,78 @@
+name: Implementation task
+description: Track a small implementation task that should normally fit in one reviewable pull request
+title: "[Task]: "
+labels:
+  - type:feature
+  - status:ready
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Keep implementation tasks focused and independently mergeable.
+        A task does not need to span persistence, API, UI, and every test layer.
+
+  - type: checkboxes
+    id: affected_modules
+    attributes:
+      label: Affected modules
+      description: Select all modules this task touches.
+      options:
+        - label: Libraries
+        - label: Movies
+        - label: TV Shows
+        - label: Scanning
+        - label: Virtual Libraries
+        - label: Scan Reports
+        - label: UI
+        - label: Infrastructure
+        - label: Documentation
+    validations:
+      required: true
+
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Describe the concrete outcome of this task.
+      placeholder: |
+        Example:
+        Expose the list of libraries through the API for use by the libraries overview.
+    validations:
+      required: true
+
+  - type: textarea
+    id: done_when
+    attributes:
+      label: Done when
+      description: Describe the observable completion criteria for this task only.
+      placeholder: |
+        Example:
+        - GET /libraries returns the required overview data
+        - Empty results are handled correctly
+        - Integration tests cover the endpoint
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: Describe related work that is intentionally excluded.
+    validations:
+      required: false
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: Link issues or prerequisites that must be completed first, if any.
+    validations:
+      required: false
+
+  - type: textarea
+    id: implementation_notes
+    attributes:
+      label: Implementation notes
+      description: Optional technical notes, architectural constraints, or reminders.
+    validations:
+      required: false
