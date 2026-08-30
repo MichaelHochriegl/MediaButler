@@ -52,6 +52,7 @@ public class CreatePhysicalLibraryRequestValidator : AbstractValidator<CreatePhy
             .NotEmpty();
         
         RuleForEach(x => x.Sources)
+            .NotNull()
             .SetValidator(new CreatePhysicalLibrarySourceValidator());
     }
 }

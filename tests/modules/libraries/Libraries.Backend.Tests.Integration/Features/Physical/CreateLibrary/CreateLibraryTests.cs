@@ -208,6 +208,23 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
         problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources");
     }
+    
+    [Fact]
+    public async Task Given_NullSource_Should_ReturnBadRequest()
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest("Physical Library", [null!]);
+
+        // Act
+        var (response, problemDetails) =
+            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
+                request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0]");
+    }
 
     [Theory]
     [InlineData("")]
