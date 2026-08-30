@@ -262,6 +262,32 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0].path");
     }
+    
+    [Theory]
+    [InlineData("//mnt/movies", "//mnt/movies")]
+    [InlineData("//mnt/movies/", "//mnt/movies")]
+    [InlineData("//mnt/movies", "//mnt/movies/")]
+    [InlineData("//mnt/movies/", "//mnt/movies/")]
+    public async Task Given_SameSources_Should_ReturnBadRequest(string path1, string path2)
+    {
+        // Arrange
+        var request = new CreatePhysicalLibraryRequest("Multi-Source Movie Library",
+        [
+            new CreatePhysicalLibrarySource(path1, MediaKind.Movies),
+            new CreatePhysicalLibrarySource(path2, MediaKind.Movies),
+        ]);
+
+        // Act
+        var (response, problemDetails) =
+            await app.Client
+                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
+                    request);
+
+        // Assert
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().ContainSingle(error =>
+            error.Name == "sources" && error.Reason == "Duplicate sources are not allowed");
+    }
 
     [Fact]
     public async Task Given_SourceWithUnknownMediaKind_Should_ReturnBadRequest()

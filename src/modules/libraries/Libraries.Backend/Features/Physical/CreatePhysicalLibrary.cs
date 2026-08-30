@@ -33,6 +33,18 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext) : Endpoint<Cr
             ThrowError(l => l.Name, $"Library with the name '{req.Name}' already present");
         }
 
+        var sources = req.Sources
+            .Select(s => new PhysicalLibrarySource(
+                (LibraryMediaKind)s.Kind,
+                new PhysicalPath(s.Path)))
+            .ToList();
+
+        if (sources.Select(s => s.Path).Distinct().Count() != sources.Count)
+        {
+            ThrowError(l => l.Sources, "Duplicate sources are not allowed");
+            return;
+        }
+        
         var library = PhysicalLibrary.Create(new LibraryName(req.Name),
             req.Sources.Select(s => new PhysicalLibrarySource((LibraryMediaKind)s.Kind,
                 new PhysicalPath(s.Path))));
