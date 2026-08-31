@@ -230,11 +230,12 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("\0")]
-    public async Task Given_SourceWithInvalidPath_Should_ReturnBadRequest(string invalidPath)
+    [InlineData(null)]
+    public async Task Given_SourceWithInvalidPath_Should_ReturnBadRequest(string? invalidPath)
     {
         // Arrange
         var request = new CreatePhysicalLibraryRequest("Physical Library",
-            [new CreatePhysicalLibrarySource(invalidPath, MediaKind.Movies)]);
+            [new CreatePhysicalLibrarySource(invalidPath!, MediaKind.Movies)]);
 
         // Act
         var (response, problemDetails) =
