@@ -15,6 +15,17 @@ public sealed class PhysicalPathTests
 
         path.Value.Should().Be($"{separator}media{separator}movies");
     }
+    
+    [Fact]
+    public void Constructor_WithMultipleDirectorySeparators_NormalizesValue()
+    {
+        var separator = Path.DirectorySeparatorChar;
+        var value = $"  {separator}media{separator}movies{separator}{separator}{separator}  ";
+
+        var path = new PhysicalPath(value);
+
+        path.Value.Should().Be($"{separator}media{separator}movies");
+    }
 
     [Fact]
     public void Constructor_AcceptsValueAtMaximumLength()

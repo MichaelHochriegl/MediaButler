@@ -38,6 +38,21 @@ public sealed record PhysicalPath
     {
         var trimmed = value.Trim();
 
-        return Path.TrimEndingDirectorySeparator(trimmed);
+        while (HasTrailingDirectorySeparator(trimmed) && !IsFileSystemRoot(trimmed))
+        {
+            trimmed = Path.TrimEndingDirectorySeparator(trimmed);
+        }
+        
+        return trimmed;
+    }
+
+    private static bool IsFileSystemRoot(string trimmed)
+    {
+        return string.Equals(trimmed, Path.GetPathRoot(trimmed), StringComparison.Ordinal);
+    }
+
+    private static bool HasTrailingDirectorySeparator(string trimmed)
+    {
+        return Path.EndsInDirectorySeparator(trimmed);
     }
 }

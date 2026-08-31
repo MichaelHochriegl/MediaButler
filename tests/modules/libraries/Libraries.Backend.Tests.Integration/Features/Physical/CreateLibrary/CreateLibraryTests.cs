@@ -269,6 +269,8 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
     [InlineData("//mnt/movies/", "//mnt/movies")]
     [InlineData("//mnt/movies", "//mnt/movies/")]
     [InlineData("//mnt/movies/", "//mnt/movies/")]
+    [InlineData("//mnt/movies//", "//mnt/movies/")]
+    [InlineData("//mnt/movies///", "//mnt/movies/")]
     public async Task Given_SameSources_Should_ReturnBadRequest(string path1, string path2)
     {
         // Arrange
