@@ -12,7 +12,9 @@ public static class ModuleDescriptors
     /// <summary>
     /// Gets a collection of assemblies that includes all module assemblies.
     /// </summary>
-    public static IEnumerable<Assembly> Assemblies => BackendAssemblies.Concat(FrontendAssemblies);
+    public static IEnumerable<Assembly> Assemblies => BackendAssemblies
+        .Concat(FrontendAssemblies)
+        .Concat(PersistenceAssemblies);
 
     /// <summary>
     /// A thread-safe collection of assemblies representing the backend modules of the application.
@@ -35,4 +37,26 @@ public static class ModuleDescriptors
     /// dependency resolution within the application.
     /// </remarks>
     public static ConcurrentBag<Assembly> FrontendAssemblies { get; } = [];
+    
+    /// <summary>
+    /// A thread-safe collection of assemblies representing the persistence modules of the application.
+    /// </summary>
+    /// <remarks>
+    /// This property holds a thread-safe, concurrent collection of assemblies
+    /// that are associated with persistence modules. It is used to organize and
+    /// manage persistence-related assemblies for module registration and
+    /// dependency resolution within the application.
+    /// </remarks>
+    public static ConcurrentBag<Assembly> PersistenceAssemblies { get; } = [];
+    
+    /// <summary>
+    /// A thread-safe collection of assemblies representing the contract modules of the application.
+    /// </summary>
+    /// <remarks>
+    /// This property holds a thread-safe, concurrent collection of assemblies
+    /// that are associated with contract modules. It is used to organize and
+    /// manage contract-related assemblies for module registration and
+    /// dependency resolution within the application.
+    /// </remarks>
+    public static ConcurrentBag<Assembly> ContractAssemblies { get; } = [];
 }

@@ -1,4 +1,6 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Libraries.Contracts.Features.Physical;
+using Libraries.Persistence;
+using Microsoft.Extensions.Hosting;
 using Modules.Common;
 
 namespace Libraries.Backend;
@@ -24,6 +26,10 @@ public static class ModuleRegistration
         {
             ModuleDescriptors.BackendAssemblies
                 .Add(typeof(ModuleRegistration).Assembly);
+            ModuleDescriptors.PersistenceAssemblies
+                .Add(typeof(LibrariesDb).Assembly);
+            ModuleDescriptors.ContractAssemblies
+                .Add(typeof(CreatePhysicalLibraryRequest).Assembly);
             
             return builder;
         }

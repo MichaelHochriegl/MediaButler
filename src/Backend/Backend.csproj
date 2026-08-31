@@ -5,7 +5,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="Aspire.Npgsql.EntityFrameworkCore.PostgreSQL" />
       <PackageReference Include="FastEndpoints.Swagger" />
       <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
         <PrivateAssets>all</PrivateAssets>
@@ -21,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\modules\libraries\Libraries.Backend\Libraries.Backend.csproj" />
+      <ProjectReference Include="..\Persistence\Persistence.csproj" />
       <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
       <ProjectReference Include="..\ServiceDiscovery\ServiceDiscovery.csproj" />
     </ItemGroup>

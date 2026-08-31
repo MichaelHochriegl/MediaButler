@@ -2,7 +2,9 @@
   <Folder Name="/src/">
     <Project Path="src/AppHost/AppHost.csproj" />
     <Project Path="src/Backend/Backend.csproj" />
+    <Project Path="src/Domain/Domain.csproj" />
     <Project Path="src/Frontend/Frontend.csproj" />
+    <Project Path="src/Persistence/Persistence.csproj" />
     <Project Path="src/ServiceDefaults/ServiceDefaults.csproj" />
     <Project Path="src/ServiceDiscovery/ServiceDiscovery.csproj" />
   </Folder>
@@ -13,6 +15,13 @@
     <Project Path="src/modules/libraries/Libraries.Backend/Libraries.Backend.csproj" />
     <Project Path="src/modules/libraries/Libraries.Contracts/Libraries.Contracts.csproj" />
     <Project Path="src/modules/libraries/Libraries.Frontend/Libraries.Frontend.csproj" />
+    <Project Path="src/modules/libraries/Libraries.Persistence/Libraries.Persistence.csproj" />
   </Folder>
-  <Folder Name="/tests/" />
+  <Folder Name="/tests/">
+    <Project Path="tests/Domain.Tests.Unit/Domain.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/tests/modules/" />
+  <Folder Name="/tests/modules/libraries/">
+    <Project Path="tests/modules/libraries/Libraries.Backend.Tests.Integration/Libraries.Backend.Tests.Integration.csproj" />
+  </Folder>
 </Solution>

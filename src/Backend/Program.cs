@@ -1,9 +1,11 @@
+using System.Text.Json.Serialization;
 using Backend;
 using Backend.Data;
 using FastEndpoints;
 using FastEndpoints.Swagger;
 using Libraries.Backend;
 using Modules.Common;
+using Persistence;
 using ServiceDiscovery;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,7 +22,8 @@ builder.Services
 
 builder.Services.AddFastEndpoints(options =>
 {
-    options.Assemblies = ModuleDescriptors.BackendAssemblies;
+    options.Assemblies = [.. ModuleDescriptors.BackendAssemblies, .. ModuleDescriptors.ContractAssemblies];
+    options.IncludeAbstractValidators = true;
 }).SwaggerDocument(options =>
 {
     options.DocumentSettings = s =>
@@ -43,6 +46,7 @@ var app = builder.Build();
 app.MapDefaultEndpoints();
 app.UseFastEndpoints(c =>
 {
+    c.Serializer.Options.Converters.Add(new JsonStringEnumConverter());
     c.Versioning.Prefix = "v";
     c.Versioning.PrependToRoute = true;
     c.Endpoints.RoutePrefix = "api";

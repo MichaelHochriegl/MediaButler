@@ -4,6 +4,7 @@ using ServiceDiscovery;
 var builder = DistributedApplication.CreateBuilder(args);
 
 var databaseServer = builder.AddPostgres(Descriptors.DatabaseServer)
+    .WithImageTag(Tags.PostgresTag)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithDataVolume(Descriptors.DatabaseVolume);
 
