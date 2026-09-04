@@ -20,6 +20,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\modules\libraries\Libraries.Backend\Libraries.Backend.csproj" />
+        <ProjectReference Include="..\modules\storage\Storage.Backend\Storage.Backend.csproj"/>
       <ProjectReference Include="..\Persistence\Persistence.csproj" />
       <ProjectReference Include="..\ServiceDefaults\ServiceDefaults.csproj" />
       <ProjectReference Include="..\ServiceDiscovery\ServiceDiscovery.csproj" />

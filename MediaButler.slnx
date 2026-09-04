@@ -17,6 +17,11 @@
     <Project Path="src/modules/libraries/Libraries.Frontend/Libraries.Frontend.csproj" />
     <Project Path="src/modules/libraries/Libraries.Persistence/Libraries.Persistence.csproj" />
   </Folder>
+    <Folder Name="/src/modules/storage/">
+        <Project Path="src/modules/storage/Storage.Backend/Storage.Backend.csproj"/>
+        <Project Path="src/modules/storage/Storage.Contracts/Storage.Contracts.csproj"/>
+        <Project Path="src/modules/storage/Storage.Integration/Storage.Integration.csproj"/>
+    </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Domain.Tests.Unit/Domain.Tests.Unit.csproj" />
   </Folder>
