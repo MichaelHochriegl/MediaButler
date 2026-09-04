@@ -7,6 +7,13 @@
 public static class Descriptors
 {
     /// <summary>
+    ///     Represents the descriptor identifier for the "media-root-path" parameter
+    ///     within the service discovery mechanism. This constant is used to uniquely
+    ///     name and reference the root path for media content.
+    /// </summary>
+    public const string MediaRootPath = "media-root-path";
+    
+    /// <summary>
     /// Represents the descriptor identifier for the "database-server" service
     /// within the service discovery mechanism. This constant is used to uniquely
     /// name and reference the database server when configuring distributed

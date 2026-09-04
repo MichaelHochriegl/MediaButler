@@ -1,5 +1,8 @@
-﻿using Microsoft.Extensions.Hosting;
+﻿using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using Modules.Common;
+using Storage.Backend.Configuration;
 using Storage.Contracts;
 
 namespace Storage.Backend;
@@ -27,6 +30,14 @@ public static class ModuleRegistration
                 .Add(typeof(ModuleRegistration).Assembly);
             ModuleDescriptors.ContractAssemblies
                 .Add(typeof(IStorageContractsMarker).Assembly);
+
+            builder.Services.AddSingleton<
+                IValidateOptions<StorageOptions>,
+                StorageOptionsValidator>();
+
+            builder.Services.AddOptions<StorageOptions>()
+                .Bind(builder.Configuration.GetSection(StorageOptions.SectionName))
+                .ValidateOnStart();
 
             return builder;
         }

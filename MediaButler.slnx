@@ -18,9 +18,9 @@
     <Project Path="src/modules/libraries/Libraries.Persistence/Libraries.Persistence.csproj" />
   </Folder>
     <Folder Name="/src/modules/storage/">
-        <Project Path="src/modules/storage/Storage.Backend/Storage.Backend.csproj"/>
-        <Project Path="src/modules/storage/Storage.Contracts/Storage.Contracts.csproj"/>
-        <Project Path="src/modules/storage/Storage.Integration/Storage.Integration.csproj"/>
+      <Project Path="src/modules/storage/Storage.Backend/Storage.Backend.csproj"/>
+      <Project Path="src/modules/storage/Storage.Contracts/Storage.Contracts.csproj"/>
+      <Project Path="src/modules/storage/Storage.Integration/Storage.Integration.csproj"/>
     </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Domain.Tests.Unit/Domain.Tests.Unit.csproj" />
@@ -28,5 +28,8 @@
   <Folder Name="/tests/modules/" />
   <Folder Name="/tests/modules/libraries/">
     <Project Path="tests/modules/libraries/Libraries.Backend.Tests.Integration/Libraries.Backend.Tests.Integration.csproj" />
+  </Folder>
+  <Folder Name="/tests/modules/storage/">
+    <Project Path="tests/modules/storage/Storage.Backend.Tests.Integration/Storage.Backend.Tests.Integration.csproj"/>
   </Folder>
 </Solution>
