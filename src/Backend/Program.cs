@@ -7,9 +7,11 @@ using Libraries.Backend;
 using Modules.Common;
 using Persistence;
 using ServiceDiscovery;
+using Storage.Backend;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.RegisterStorageModule();
 builder.RegisterLibrariesModule();
 
 builder.AddNpgsqlDbContext<AppDbContext>(Descriptors.Database);
