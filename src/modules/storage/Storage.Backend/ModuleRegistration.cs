@@ -3,6 +3,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Options;
 using Modules.Common;
 using Storage.Backend.Configuration;
+using Storage.Backend.Features;
 using Storage.Contracts;
 
 namespace Storage.Backend;
@@ -34,6 +35,8 @@ public static class ModuleRegistration
             builder.Services.AddSingleton<
                 IValidateOptions<StorageOptions>,
                 StorageOptionsValidator>();
+
+            builder.Services.AddSingleton<StorageLocationRegistry>();
 
             builder.Services.AddOptions<StorageOptions>()
                 .Bind(builder.Configuration.GetSection(StorageOptions.SectionName))

@@ -53,9 +53,7 @@ internal sealed class StorageOptionsValidator
 
             try
             {
-                normalizedRoot =
-                    Path.TrimEndingDirectorySeparator(
-                        Path.GetFullPath(location.RootPath));
+                normalizedRoot = location.NormalizedRootPath;
             }
             catch (Exception exception)
                 when (exception is ArgumentException
