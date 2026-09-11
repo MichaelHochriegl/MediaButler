@@ -8,5 +8,6 @@
         <ProjectReference Include="..\..\..\Domain\Domain.csproj"/>
         <ProjectReference Include="..\..\Modules.Common\Modules.Common.csproj"/>
         <ProjectReference Include="..\Storage.Contracts\Storage.Contracts.csproj"/>
+        <ProjectReference Include="..\Storage.Integration\Storage.Integration.csproj" />
     </ItemGroup>
 </Project>

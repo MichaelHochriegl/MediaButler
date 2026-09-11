@@ -10,24 +10,30 @@ public class StorageConfigurationTests
     [Fact]
     public async Task Given_EmptyConfiguration_Should_Start()
     {
+        // Act
         var startHost = () => StartHostAsync([]);
 
+        // Assert
         await startHost.Should().NotThrowAsync();
     }
 
     [Fact]
     public async Task Given_ValidLocation_Should_Start()
     {
+        // Arrange
         var configuration = Location("media", "Media", "/media");
 
+        // Act
         var startHost = () => StartHostAsync(configuration);
 
+        // Assert
         await startHost.Should().NotThrowAsync();
     }
 
     [Fact]
     public async Task Given_SeveralValidLocations_Should_Start()
     {
+        // Arrange
         var configuration = new Dictionary<string, string?>
         {
             ["Storage:Locations:movies:DisplayName"] = "Movies",
@@ -38,18 +44,23 @@ public class StorageConfigurationTests
             ["Storage:Locations:music:RootPath"] = "/media/music"
         };
 
+        // Act
         var startHost = () => StartHostAsync(configuration);
 
+        // Assert
         await startHost.Should().NotThrowAsync();
     }
 
     [Fact]
     public async Task Given_RelativeRootPath_Should_RejectStartup()
     {
+        // Arrange
         var configuration = Location("media", "Media", "media");
 
+        // Act
         var startHost = () => StartHostAsync(configuration);
 
+        // Assert
         await startHost.Should().ThrowAsync<OptionsValidationException>();
     }
 
@@ -58,8 +69,10 @@ public class StorageConfigurationTests
     public async Task Given_BlankRequiredLocationValue_Should_RejectStartup(
         IReadOnlyDictionary<string, string?> configuration)
     {
+        // Act
         var startHost = () => StartHostAsync(configuration);
 
+        // Assert
         await startHost.Should().ThrowAsync<OptionsValidationException>();
     }
 
@@ -73,6 +86,7 @@ public class StorageConfigurationTests
     [Fact]
     public async Task Given_RootPathsDifferingOnlyByTrailingSeparator_Should_RejectStartup()
     {
+        // Arrange
         var configuration = new Dictionary<string, string?>
         {
             ["Storage:Locations:media:DisplayName"] = "Media",
@@ -81,21 +95,26 @@ public class StorageConfigurationTests
             ["Storage:Locations:duplicate:RootPath"] = "/media/"
         };
 
+        // Act
         var startHost = () => StartHostAsync(configuration);
 
+        // Assert
         await startHost.Should().ThrowAsync<OptionsValidationException>();
     }
 
     [Fact]
     public async Task Given_ValidNonexistentAbsoluteRootPath_Should_Start()
     {
+        // Arrange
         var configuration = Location(
             "missing",
             "Missing directory",
             $"/media-butler-tests/{Guid.NewGuid():N}/does-not-exist");
 
+        // Act
         var startHost = () => StartHostAsync(configuration);
 
+        // Assert
         await startHost.Should().NotThrowAsync();
     }
 

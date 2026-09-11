@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using Domain.Storage;
 using Microsoft.Extensions.Options;
 using Storage.Backend.Configuration;
@@ -49,7 +50,7 @@ internal sealed class StorageLocationRegistry
     ///     <see langword="true" /> when a configured storage location exists for <paramref name="id" />;
     ///     otherwise, <see langword="false" />.
     /// </returns>
-    public bool TryGet(StorageLocationId id, out ConfiguredStorageLocation? location)
+    public bool TryGet(StorageLocationId id, [NotNullWhen(true)] out ConfiguredStorageLocation? location)
     {
         return _configuredLocations.TryGetValue(id, out location);
     }

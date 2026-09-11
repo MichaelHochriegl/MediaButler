@@ -5,6 +5,7 @@ using Modules.Common;
 using Storage.Backend.Configuration;
 using Storage.Backend.Features;
 using Storage.Contracts;
+using Storage.Integration;
 
 namespace Storage.Backend;
 
@@ -37,6 +38,7 @@ public static class ModuleRegistration
                 StorageOptionsValidator>();
 
             builder.Services.AddSingleton<StorageLocationRegistry>();
+            builder.Services.AddSingleton<IStoragePathResolver, StoragePathResolver>();
 
             builder.Services.AddOptions<StorageOptions>()
                 .Bind(builder.Configuration.GetSection(StorageOptions.SectionName))
