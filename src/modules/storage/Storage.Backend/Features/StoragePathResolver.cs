@@ -21,21 +21,23 @@ internal sealed class StoragePathResolver(StorageLocationRegistry locationRegist
         try
         {
             resolvedPath = Path.GetFullPath(relativePath, location.RootPath);
+            
+            if (!IsContainedWithin(location.RootPath, resolvedPath))
+            {
+                throw new EscapingStoragePathException(locationId, relativePath);
+            }
+
+            if (!IsSymlinkFree(location, relativePath))
+            {
+                throw new SymlinkStoragePathException(location.Id, relativePath);
+            }
         }
-        catch (ArgumentException exception)
+        catch (Exception exception)
+            when(exception is ArgumentException or PathTooLongException)
         {
             throw new InvalidStoragePathException(locationId, relativePath, exception);
         }
 
-        if (!IsContainedWithin(location.RootPath, resolvedPath))
-        {
-            throw new EscapingStoragePathException(locationId, relativePath);
-        }
-
-        if (!IsSymlinkFree(location, relativePath))
-        {
-            throw new SymlinkStoragePathException(location.Id, relativePath);
-        }
 
         return resolvedPath;
     }
