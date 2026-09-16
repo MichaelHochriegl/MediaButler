@@ -15,11 +15,13 @@
 
     <ItemGroup>
         <PackageReference Include="AwesomeAssertions"/>
+        <PackageReference Include="FastEndpoints.Testing"/>
+        <PackageReference Include="Testcontainers.PostgreSql"/>
         <PackageReference Include="xunit.v3.mtp-v2"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\..\..\..\src\modules\storage\Storage.Backend\Storage.Backend.csproj"/>
+        <ProjectReference Include="..\..\..\..\src\Backend\Backend.csproj"/>
     </ItemGroup>
 
 </Project>
