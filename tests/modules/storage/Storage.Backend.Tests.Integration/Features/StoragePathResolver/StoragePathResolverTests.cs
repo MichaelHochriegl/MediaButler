@@ -30,8 +30,8 @@ public sealed class StoragePathResolverTests
     [InlineData("Movies/Action", "Movies/Action")]
     [InlineData("Movies//Action", "Movies/Action")]
     [InlineData("Movies///Action", "Movies/Action")]
-    [InlineData("Movies/Action/", "Movies/Action/")]
-    [InlineData("Movies//Action///", "Movies/Action/")]
+    [InlineData("Movies/Action/", "Movies/Action")]
+    [InlineData("Movies//Action///", "Movies/Action")]
     [InlineData("movies/Action", "movies/Action")]
     [InlineData("Movies With Spaces/Amélie", "Movies With Spaces/Amélie")]
     [InlineData(".hidden/Movies", ".hidden/Movies")]
@@ -50,7 +50,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(MediaLocation, relativePath);
 
         // Assert
-        path.Should().Be($"{_rootPath}/{expectedRelativePath}");
+        path.AbsolutePath.Value.Should().Be($"{_rootPath}/{expectedRelativePath}");
+        path.RelativePath.Value.Should().Be(expectedRelativePath);
     }
 
     [Theory(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -70,7 +71,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(MediaLocation, relativePath);
 
         // Assert
-        path.Should().Be($"{_rootPath}/{expectedRelativePath}");
+        path.AbsolutePath.Value.Should().Be($"{_rootPath}/{expectedRelativePath}");
+        path.RelativePath.Value.Should().Be(expectedRelativePath);
     }
 
     [Theory(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -86,7 +88,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(MediaLocation, relativePath);
 
         // Assert
-        path.Should().Be(_rootPath);
+        path.AbsolutePath.Value.Should().Be(_rootPath);
+        path.RelativePath.Value.Should().Be(".");
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -100,7 +103,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(MediaLocation, "");
 
         // Assert
-        path.Should().Be(_rootPath);
+        path.AbsolutePath.Value.Should().Be(_rootPath);
+        path.RelativePath.Value.Should().Be(".");
     }
 
     [Theory(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -116,7 +120,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(MediaLocation, relativePath);
 
         // Assert
-        path.Should().Be("/");
+        path.AbsolutePath.Value.Should().Be("/");
+        path.RelativePath.Value.Should().Be(".");
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -131,7 +136,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(MediaLocation, relativePath);
 
         // Assert
-        path.Should().Be($"/{relativePath}");
+        path.AbsolutePath.Value.Should().Be($"/{relativePath}");
+        path.RelativePath.Value.Should().Be(relativePath);
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -146,7 +152,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(new StorageLocationId("archive"), "Movies");
 
         // Assert
-        path.Should().Be($"{_rootPath}-archive/Movies");
+        path.AbsolutePath.Value.Should().Be($"{_rootPath}-archive/Movies");
+        path.RelativePath.Value.Should().Be("Movies");
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -160,7 +167,8 @@ public sealed class StoragePathResolverTests
         var path = resolver.ResolvePath(MediaLocation, "Movies/Action");
 
         // Assert
-        path.Should().Be($"{_rootPath}/Movies/Action");
+        path.AbsolutePath.Value.Should().Be($"{_rootPath}/Movies/Action");
+        path.RelativePath.Value.Should().Be("Movies/Action");
     }
 
     [Theory(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]

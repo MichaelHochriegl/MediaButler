@@ -10,7 +10,7 @@ public interface IStoragePathResolver
     /// <exception cref="RootedStoragePathException">The supplied path is rooted.</exception>
     /// <exception cref="EscapingStoragePathException">The path escapes the configured location.</exception>
     /// <exception cref="SymlinkStoragePathException">Resolution would traverse a symbolic link.</exception>
-    string ResolvePath(StorageLocationId locationId, string relativePath);
+    ResolvedStoragePath ResolvePath(StorageLocationId locationId, string relativePath);
 }
 
 public sealed class StorageLocationNotFoundException(StorageLocationId locationId)

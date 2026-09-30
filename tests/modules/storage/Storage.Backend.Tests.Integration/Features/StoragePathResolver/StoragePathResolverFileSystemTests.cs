@@ -26,7 +26,7 @@ public sealed class StoragePathResolverFileSystemTests : IDisposable
         var path = resolver.ResolvePath(MediaLocation, "Movies/Action");
 
         // Assert
-        path.Should().Be($"{RootPath}/Movies/Action");
+        path.AbsolutePath.Value.Should().Be($"{RootPath}/Movies/Action");
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -43,7 +43,7 @@ public sealed class StoragePathResolverFileSystemTests : IDisposable
         var path = resolver.ResolvePath(MediaLocation, "Movies/Action");
 
         // Assert
-        path.Should().Be($"{RootPath}/Movies/Action");
+        path.AbsolutePath.Value.Should().Be($"{RootPath}/Movies/Action");
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -60,7 +60,7 @@ public sealed class StoragePathResolverFileSystemTests : IDisposable
         var path = resolver.ResolvePath(MediaLocation, "Movies/Action");
 
         // Assert
-        path.Should().Be($"{RootPath}/Movies/Action");
+        path.AbsolutePath.Value.Should().Be($"{RootPath}/Movies/Action");
     }
 
     [Theory(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
@@ -79,7 +79,7 @@ public sealed class StoragePathResolverFileSystemTests : IDisposable
         var path = resolver.ResolvePath(MediaLocation, "Movies/Action");
 
         // Assert
-        path.Should().Be($"{RootPath}/Movies/Action");
+        path.AbsolutePath.Value.Should().Be($"{RootPath}/Movies/Action");
         Directory.Exists($"{RootPath}/Movies/Action").Should().BeFalse();
         Directory.Exists($"{RootPath}/Movies").Should().Be(parentExists);
     }
@@ -95,7 +95,7 @@ public sealed class StoragePathResolverFileSystemTests : IDisposable
         var path = resolver.ResolvePath(MediaLocation, "Movies/Action");
 
         // Assert
-        path.Should().Be($"{RootPath}/Movies/Action");
+        path.AbsolutePath.Value.Should().Be($"{RootPath}/Movies/Action");
         Directory.Exists(RootPath).Should().BeFalse();
     }
 
@@ -278,7 +278,7 @@ public sealed class StoragePathResolverFileSystemTests : IDisposable
         var path = resolver.ResolvePath(MediaLocation, "../media/Movies");
 
         // Assert
-        path.Should().Be($"{RootPath}/Movies");
+        path.AbsolutePath.Value.Should().Be($"{RootPath}/Movies");
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]

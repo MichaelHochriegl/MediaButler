@@ -24,7 +24,7 @@ public class GetLibraryByIdTests(GetLibraryByIdAppFixture app) : TestBase<GetLib
         // Arrange
         var request = new CreatePhysicalLibraryRequest("Movies",
         [
-            new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies),
+            new CreatePhysicalLibrarySource("media", "Movies", MediaKind.Movies),
         ]);
         var beforeCreation = DateTimeOffset.UtcNow;
 

@@ -5,7 +5,7 @@ namespace Storage.Backend.Features;
 
 internal sealed class StoragePathResolver(StorageLocationRegistry locationRegistry) : IStoragePathResolver
 {
-    public string ResolvePath(StorageLocationId locationId, string relativePath)
+    public ResolvedStoragePath ResolvePath(StorageLocationId locationId, string relativePath)
     {
         if (!locationRegistry.TryGet(locationId, out var location))
         {
@@ -17,10 +17,16 @@ internal sealed class StoragePathResolver(StorageLocationRegistry locationRegist
             throw new RootedStoragePathException(locationId, relativePath);
         }
 
-        string resolvedPath;
+        StorageRelativePath storageRelativePath;
+        StorageAbsolutePath storageAbsolutePath;
         try
         {
-            resolvedPath = Path.GetFullPath(relativePath, location.RootPath);
+            var resolvedPath = Path.GetFullPath(relativePath, location.RootPath);
+            resolvedPath = Path.TrimEndingDirectorySeparator(resolvedPath);
+            
+            var relPath = Path.GetRelativePath(location.RootPath, resolvedPath);
+            
+            
             
             if (!IsContainedWithin(location.RootPath, resolvedPath))
             {
@@ -31,15 +37,20 @@ internal sealed class StoragePathResolver(StorageLocationRegistry locationRegist
             {
                 throw new SymlinkStoragePathException(location.Id, relativePath);
             }
+            
+            storageRelativePath = new StorageRelativePath(relPath);
+            storageAbsolutePath = new StorageAbsolutePath(resolvedPath);
         }
         catch (Exception exception)
             when(exception is ArgumentException or PathTooLongException)
         {
             throw new InvalidStoragePathException(locationId, relativePath, exception);
         }
-
-
-        return resolvedPath;
+        
+        return new ResolvedStoragePath(
+            locationId,
+            storageRelativePath,
+            storageAbsolutePath);
     }
 
     private static bool IsContainedWithin(string root, string path)

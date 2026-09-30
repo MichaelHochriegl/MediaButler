@@ -5,7 +5,7 @@ using Storage.Integration;
 
 namespace Storage.Backend.Features;
 
-public class GetDirectoriesEndpoint(IStoragePathResolver resolver)
+public class GetDirectoriesEndpoint(IStorageDirectoryResolver resolver)
     : Endpoint<GetDirectoriesRequest, GetDirectoriesResponse>
 {
     public override void Configure()
@@ -44,7 +44,7 @@ public class GetDirectoriesEndpoint(IStoragePathResolver resolver)
             return;
         }
 
-        if (!StorageLocationAvailability.IsAvailable(resolver, locationId))
+        if (!IsRootAvailable(locationId))
         {
             ThrowError("The storage location is unavailable.", 503);
             return;
@@ -52,8 +52,8 @@ public class GetDirectoriesEndpoint(IStoragePathResolver resolver)
 
         try
         {
-            var rootPath = resolver.ResolvePath(locationId, ".");
-            var path = resolver.ResolvePath(locationId,
+            var rootPath = resolver.ResolveDirectory(locationId, ".").AbsolutePath.Value;
+            var path = resolver.ResolveDirectory(locationId,
                 string.IsNullOrEmpty(req.RelativePath) ? "." : req.RelativePath);
             var directories = new List<StorageDirectoryResponse>();
             var options = new EnumerationOptions
@@ -63,7 +63,7 @@ public class GetDirectoriesEndpoint(IStoragePathResolver resolver)
                 AttributesToSkip = FileAttributes.ReparsePoint
             };
 
-            foreach (var child in Directory.EnumerateDirectories(path, "*", options))
+            foreach (var child in Directory.EnumerateDirectories(path.AbsolutePath.Value, "*", options))
             {
                 ct.ThrowIfCancellationRequested();
                 directories.Add(new StorageDirectoryResponse(Path.GetFileName(child),
@@ -73,13 +73,28 @@ public class GetDirectoriesEndpoint(IStoragePathResolver resolver)
             directories.Sort((left, right) => StringComparer.Ordinal.Compare(left.Name, right.Name));
             await Send.OkAsync(new GetDirectoriesResponse(directories), ct);
         }
+        catch (InvalidStoragePathException exception) when (exception.InnerException is PathTooLongException)
+        {
+            ThrowError("The directory path is too long.", 400);
+        }
         catch (InvalidStoragePathException)
         {
             ThrowError(r => r.RelativePath, "The directory path is invalid or traverses a symbolic link.");
         }
+        catch (StorageDirectoryNotFoundException)
+        {
+            if (IsRootAvailable(locationId))
+                ThrowError(r => r.RelativePath, "The directory does not exist.", 404);
+            else
+                ThrowError("The storage location is unavailable.", 503);
+        }
+        catch (StorageDirectoryNotAccessibleException)
+        {
+            ThrowError("The directory cannot be read.", 403);
+        }
         catch (DirectoryNotFoundException)
         {
-            if (StorageLocationAvailability.IsAvailable(resolver, locationId))
+            if (IsRootAvailable(locationId))
                 ThrowError(r => r.RelativePath, "The directory does not exist.", 404);
             else
                 ThrowError("The storage location is unavailable.", 503);
@@ -88,13 +103,28 @@ public class GetDirectoriesEndpoint(IStoragePathResolver resolver)
         {
             ThrowError("The directory cannot be read.", 403);
         }
-        catch (PathTooLongException)
+        catch (Exception exception) when (exception is ArgumentException or PathTooLongException)
         {
             ThrowError("The directory path is too long.", 400);
         }
         catch (IOException)
         {
             ThrowError("The filesystem is unavailable.", 503);
+        }
+    }
+
+    private bool IsRootAvailable(StorageLocationId locationId)
+    {
+        try
+        {
+            resolver.ResolveDirectory(locationId, ".");
+            return true;
+        }
+        catch (Exception exception) when (exception is InvalidStoragePathException
+                                          or StorageDirectoryNotFoundException
+                                          or StorageDirectoryNotAccessibleException)
+        {
+            return false;
         }
     }
 }

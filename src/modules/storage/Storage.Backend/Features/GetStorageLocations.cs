@@ -4,7 +4,7 @@ using Storage.Integration;
 
 namespace Storage.Backend.Features;
 
-public class GetStorageLocationsEndpoint(IStoragePathResolver resolver)
+public class GetStorageLocationsEndpoint(IStorageDirectoryResolver resolver)
     : EndpointWithoutRequest<GetStorageLocationsResponse>
 {
     public override void Configure()
@@ -23,8 +23,20 @@ public class GetStorageLocationsEndpoint(IStoragePathResolver resolver)
         foreach (var location in Resolve<StorageLocationRegistry>().ConfiguredLocations)
         {
             ct.ThrowIfCancellationRequested();
-            locations.Add(new StorageLocationResponse(location.Id.Value, location.DisplayName,
-                StorageLocationAvailability.IsAvailable(resolver, location.Id)));
+            bool isLocationAvailable;
+            try
+            {
+                resolver.ResolveDirectory(location.Id, ".");
+                isLocationAvailable = true;
+            }
+            catch (Exception exception) when (exception is InvalidStoragePathException
+                                              or StorageDirectoryNotFoundException
+                                              or StorageDirectoryNotAccessibleException)
+            {
+                isLocationAvailable = false;
+            }
+
+            locations.Add(new StorageLocationResponse(location.Id.Value, location.DisplayName, isLocationAvailable));
         }
 
         await Send.OkAsync(new GetStorageLocationsResponse(locations), ct);

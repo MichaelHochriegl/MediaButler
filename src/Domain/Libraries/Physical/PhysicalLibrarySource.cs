@@ -1,11 +1,18 @@
+using Domain.Storage;
+
 namespace Domain.Libraries.Physical;
 
-public sealed class PhysicalLibrarySource : LibrarySource
+public sealed class PhysicalLibrarySource(
+    LibraryMediaKind mediaKind,
+    StorageLocationId storageLocationId,
+    StorageRelativePath relativePath)
+    : LibrarySource(mediaKind)
 {
-    public PhysicalPath Path { get; private set; }
+    public StorageLocationId StorageLocationId { get; private set; } = storageLocationId;
+
+    public StorageRelativePath RelativePath { get; private set; } = relativePath;
     
-    public PhysicalLibrarySource(LibraryMediaKind mediaKind, PhysicalPath path) : base(mediaKind)
-    {
-        Path = path;
-    }
+    public bool OverlapsWith(PhysicalLibrarySource other) =>
+        StorageLocationId == other.StorageLocationId &&
+        RelativePath.Overlaps(other.RelativePath);
 }

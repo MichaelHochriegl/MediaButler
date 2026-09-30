@@ -1,6 +1,5 @@
 using System.Net;
 using AwesomeAssertions;
-using Domain.Libraries;
 using FastEndpoints;
 using FastEndpoints.Testing;
 using Libraries.Backend.Features.Physical;
@@ -20,292 +19,397 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
     }
 
     [Fact]
-    public async Task Given_ValidPhysicalLibrary_Should_CreateLibrary()
+    public async Task Given_ValidStorageSources_Should_CreateAndPersistLogicalSources()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Physical Test Library",
-        [
-            new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies),
-            new CreatePhysicalLibrarySource("//mnt/tv-shows", MediaKind.TvShows),
-        ]);
+        var request = CreateRequest("Physical Test Library",
+            Source("media", "./Movies/Action/..", MediaKind.Movies),
+            Source("media", "TV Shows", MediaKind.TvShows));
 
-        // Act
-        var (response, result) =
-            await app.Client
-                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(
-                    request);
+        var (response, result) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(request);
 
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-        result.Should().NotBeNull();
         result.Id.Should().NotBeEmpty();
         response.Headers.Location.Should().NotBeNull();
         response.Headers.Location!.ToString().Should().Be($"/api/libraries/{result.Id}");
+
+        var sources = await GetPersistedSourcesAsync(result.Id);
+        sources.Should().BeEquivalentTo([
+            new PersistedSource("media", "Movies", (int)MediaKind.Movies),
+            new PersistedSource("media", "TV Shows", (int)MediaKind.TvShows)
+        ]);
+        sources.Should().OnlyContain(source =>
+            !source.RelativePath.StartsWith(app.MediaRootPath, StringComparison.Ordinal));
     }
 
     [Fact]
     public async Task Given_MultipleSourcesWithSameMediaKind_Should_CreateLibrary()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Multi-Source Movie Library",
-        [
-            new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies),
-            new CreatePhysicalLibrarySource("//mnt/movies-archive", MediaKind.Movies),
-        ]);
+        var request = CreateRequest("Multi-Source Movie Library",
+            Source("media", "Movies", MediaKind.Movies),
+            Source("media", "Movies-Archive", MediaKind.Movies));
 
-        // Act
-        var (response, result) =
-            await app.Client
-                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(
-                    request);
+        var (response, result) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(request);
 
-        // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Created);
-
-        // TODO: use the proper endpoints once they are in place, assert with DbContext is just a temp solution
-        await using var scope = app.Services.CreateAsyncScope();
-        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var library = await db.Libs.PhysicalLibraries
-            .Include(l => l.Sources)
-            .SingleAsync(l => l.Id == result.Id, cancellationToken: TestContext.Current.CancellationToken);
-
-        library.Sources.Should().HaveCount(2);
-        library.Sources.Should().OnlyContain(source => source.MediaKind == LibraryMediaKind.Movies);
-        library.Sources.Select(source => source.Path.Value)
-            .Should().BeEquivalentTo("//mnt/movies", "//mnt/movies-archive");
+        var sources = await GetPersistedSourcesAsync(result.Id);
+        sources.Should().HaveCount(2);
+        sources.Should().OnlyContain(source => source.MediaKind == (int)MediaKind.Movies);
     }
-    
+
     [Theory]
     [InlineData("")]
     [InlineData(" ")]
     public async Task Given_LibraryWithInvalidName_Should_ReturnBadRequest(string invalidName)
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest(invalidName,
-            [new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies)]);
+        var request = CreateRequest(invalidName, Source("media", "Movies", MediaKind.Movies));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error =>
-            error.Name == "name" &&
-            error.Reason == "'name' must not be empty.");
+        AssertBadRequestFor(response, problemDetails, "name");
     }
 
     [Fact]
     public async Task Given_LibraryWithSameNameAlreadyExists_Should_ReturnBadRequest()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Duplicate Physical Library",
-            [new CreatePhysicalLibrarySource("//mnt/movies", MediaKind.Movies)]);
+        var first = CreateRequest("Duplicate Physical Library",
+            Source("media", "Movies", MediaKind.Movies));
+        var duplicate = CreateRequest("Duplicate Physical Library",
+            Source("media", "TV Shows", MediaKind.TvShows));
+        var (createdResponse, _) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(first);
+        createdResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var (createResponse, _) =
-            await app.Client
-                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(
-                    request);
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(duplicate);
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error =>
-            error.Name == "name" &&
-            error.Reason == $"Library with the name '{request.Name}' already present");
+        AssertBadRequestFor(response, problemDetails, "name");
     }
 
     [Fact]
     public async Task Given_ConcurrentRequestsWithSameName_Should_CreateOneLibraryAndRejectTheOthers()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Concurrent Physical Library",
-            [new CreatePhysicalLibrarySource("//mnt/concurrent-movies", MediaKind.Movies)]);
+        var request = CreateRequest("Concurrent Physical Library",
+            Source("media", "Movies", MediaKind.Movies));
 
-        // Act
         var responses = await Task.WhenAll(Enumerable.Range(0, 4).Select(async _ =>
         {
-            var (response, _) =
-                await app.Client
-                    .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
-
-            return response.StatusCode;
+            var (response, _) = await app.Client
+                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+            return response;
         }));
 
-        // Assert
-        responses.Should().ContainSingle(status => status == HttpStatusCode.Created);
-        responses.Should().HaveCount(4);
-        responses.Should().OnlyContain(status =>
-            status == HttpStatusCode.Created || status == HttpStatusCode.BadRequest);
+        responses.Should().ContainSingle(response => response.StatusCode == HttpStatusCode.Created);
+        responses.Should().OnlyContain(response =>
+            response.StatusCode == HttpStatusCode.Created ||
+            response.StatusCode == HttpStatusCode.BadRequest);
     }
 
     [Fact]
-    public async Task Given_SourcePathIsManagedByAnotherLibrary_Should_ReturnBadRequest()
+    public async Task Given_ExactSourceIsManagedByAnotherLibrary_Should_ReturnBadRequest()
     {
-        // Arrange
-        var existingLibrary = new CreatePhysicalLibraryRequest("Movies",
-            [new CreatePhysicalLibrarySource("//mnt/shared-movies", MediaKind.Movies)]);
-        var newLibrary = new CreatePhysicalLibraryRequest("Archive Movies",
-            [new CreatePhysicalLibrarySource("//mnt/shared-movies", MediaKind.Movies)]);
+        var existing = CreateRequest("Movies", Source("media", "Movies", MediaKind.Movies));
+        var conflicting = CreateRequest("Archive Movies", Source("media", "Movies", MediaKind.Movies));
+        var (createdResponse, _) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(existing);
+        createdResponse.StatusCode.Should().Be(HttpStatusCode.Created);
 
-        var (createResponse, _) =
-            await app.Client
-                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(
-                    existingLibrary);
-        createResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(conflicting);
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                newLibrary);
+        AssertBadRequestFor(response, problemDetails, "sources");
+    }
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error =>
-            error.Name == "sources" &&
-            error.Reason == "One or more sources paths are already managed by another library");
+    [Theory]
+    [InlineData("Movies", "Movies/Action")]
+    [InlineData("Movies/Action", "Movies")]
+    public async Task Given_OverlappingSourceIsManagedByAnotherLibrary_Should_ReturnBadRequest(
+        string existingPath,
+        string conflictingPath)
+    {
+        var existing = CreateRequest("Existing", Source("media", existingPath, MediaKind.Movies));
+        var conflicting = CreateRequest("Conflicting", Source("media", conflictingPath, MediaKind.Movies));
+        var (createdResponse, _) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(existing);
+        createdResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(conflicting);
+
+        AssertBadRequestFor(response, problemDetails, "sources");
     }
 
     [Fact]
     public async Task Given_NoSources_Should_ReturnBadRequest()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Physical Library", []);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(new CreatePhysicalLibraryRequest("Physical Library", []));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources");
+        AssertBadRequestFor(response, problemDetails, "sources");
     }
 
     [Fact]
     public async Task Given_NullSources_Should_ReturnBadRequest()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Physical Library", null!);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(new CreatePhysicalLibraryRequest("Physical Library", null!));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources");
+        AssertBadRequestFor(response, problemDetails, "sources");
     }
-    
+
     [Fact]
     public async Task Given_NullSource_Should_ReturnBadRequest()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Physical Library", [null!]);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(new CreatePhysicalLibraryRequest("Physical Library", [null!]));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0]");
+        AssertBadRequestFor(response, problemDetails, "sources[0]");
     }
 
     [Theory]
+    [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
-    [InlineData("\0")]
-    [InlineData(null)]
-    public async Task Given_SourceWithInvalidPath_Should_ReturnBadRequest(string? invalidPath)
+    public async Task Given_InvalidStorageLocationId_Should_ReturnBadRequest(string? locationId)
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Physical Library",
-            [new CreatePhysicalLibrarySource(invalidPath!, MediaKind.Movies)]);
+        var request = CreateRequest("Physical Library",
+            Source(locationId, "Movies", MediaKind.Movies));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0].path");
+        AssertBadRequestFor(response, problemDetails, "sources[0].storageLocationId");
     }
 
     [Fact]
-    public async Task Given_SourceWithPathExceedingMaximumLength_Should_ReturnBadRequest()
+    public async Task Given_UnknownStorageLocationId_Should_RejectSource()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Physical Library",
-            [new CreatePhysicalLibrarySource(new string('a', 1025), MediaKind.Movies)]);
+        var request = CreateRequest("Physical Library",
+            Source("unknown", "Movies", MediaKind.Movies));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0].path");
+        AssertRejectedFor(response, problemDetails, "sources[0].storageLocationId");
     }
-    
+
     [Theory]
-    [InlineData("//mnt/movies", "//mnt/movies")]
-    [InlineData("//mnt/movies/", "//mnt/movies")]
-    [InlineData("//mnt/movies", "//mnt/movies/")]
-    [InlineData("//mnt/movies/", "//mnt/movies/")]
-    [InlineData("//mnt/movies//", "//mnt/movies/")]
-    [InlineData("//mnt/movies///", "//mnt/movies/")]
-    public async Task Given_SameSources_Should_ReturnBadRequest(string path1, string path2)
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData("/Movies")]
+    [InlineData("../Movies")]
+    [InlineData("Movies/../../outside")]
+    public async Task Given_InvalidRelativePath_Should_ReturnBadRequest(string? relativePath)
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Multi-Source Movie Library",
-        [
-            new CreatePhysicalLibrarySource(path1, MediaKind.Movies),
-            new CreatePhysicalLibrarySource(path2, MediaKind.Movies),
-        ]);
+        var request = CreateRequest("Physical Library",
+            Source("media", relativePath, MediaKind.Movies));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client
-                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                    request);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error =>
-            error.Name == "sources" && error.Reason == "Duplicate sources are not allowed");
+        AssertBadRequestFor(response, problemDetails, "sources[0].relativePath");
+    }
+
+    [Fact]
+    public async Task Given_RelativePathExceedsMaximumLength_Should_ReturnBadRequest()
+    {
+        var request = CreateRequest("Physical Library",
+            Source("media", new string('a', 1025), MediaKind.Movies));
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+        AssertBadRequestFor(response, problemDetails, "sources[0].relativePath");
+    }
+
+    [Fact]
+    public async Task Given_TargetDirectoryDoesNotExist_Should_RejectSource()
+    {
+        var request = CreateRequest("Physical Library",
+            Source("media", "Missing", MediaKind.Movies));
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+        AssertRejectedFor(response, problemDetails, "sources[0].relativePath");
+    }
+
+    [Fact]
+    public async Task Given_StorageLocationIsUnavailable_Should_RejectSource()
+    {
+        var request = CreateRequest("Physical Library",
+            Source("offline", "Movies", MediaKind.Movies));
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+        AssertRejectedFor(response, problemDetails, "sources[0].relativePath");
+    }
+
+    [Fact]
+    public async Task Given_TargetIsAFile_Should_ReturnBadRequest()
+    {
+        var request = CreateRequest("Physical Library",
+            Source("media", Path.GetFileName(app.FilePath), MediaKind.Movies));
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+        AssertBadRequestFor(response, problemDetails, "sources[0].relativePath");
+    }
+
+    [Fact(Skip = "Symbolic-link validation requires Linux semantics.", SkipUnless = nameof(IsLinux))]
+    public async Task Given_TargetTraversesSymbolicLink_Should_ReturnBadRequest()
+    {
+        var request = CreateRequest("Physical Library",
+            Source("media", Path.GetFileName(app.SymlinkPath), MediaKind.Movies));
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+        AssertBadRequestFor(response, problemDetails, "sources[0].relativePath");
+    }
+
+    [Theory]
+    [InlineData("Movies", "Movies")]
+    [InlineData("Movies", "./Movies")]
+    [InlineData("Movies", "TV Shows/../Movies")]
+    [InlineData("Movies/Action/..", "Movies")]
+    public async Task Given_SourcesResolveToSameDirectory_Should_ReturnBadRequest(
+        string firstPath,
+        string secondPath)
+    {
+        var request = CreateRequest("Duplicate Sources",
+            Source("media", firstPath, MediaKind.Movies),
+            Source("media", secondPath, MediaKind.Movies));
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+        AssertBadRequestFor(response, problemDetails, "sources");
+    }
+
+    [Theory]
+    [InlineData("Movies", "Movies/Action")]
+    [InlineData("Movies/Action", "Movies")]
+    public async Task Given_OverlappingSourcesInSameLocation_Should_ReturnBadRequest(
+        string firstPath,
+        string secondPath)
+    {
+        var request = CreateRequest("Overlapping Sources",
+            Source("media", firstPath, MediaKind.Movies),
+            Source("media", secondPath, MediaKind.Movies));
+
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+        AssertBadRequestFor(response, problemDetails, "sources");
+    }
+
+    [Fact]
+    public async Task Given_SiblingSourcesInSameLocation_Should_CreateLibrary()
+    {
+        var request = CreateRequest("Sibling Sources",
+            Source("media", "Movies", MediaKind.Movies),
+            Source("media", "Movies-Archive", MediaKind.Movies));
+
+        var (response, _) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
+    }
+
+    [Fact]
+    public async Task Given_SameRelativePathInDifferentLocations_Should_CreateLibrary()
+    {
+        var request = CreateRequest("Distributed Sources",
+            Source("media", "Movies", MediaKind.Movies),
+            Source("archive", "Movies", MediaKind.Movies));
+
+        var (response, _) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>(request);
+
+        response.StatusCode.Should().Be(HttpStatusCode.Created);
     }
 
     [Fact]
     public async Task Given_SourceWithUnknownMediaKind_Should_ReturnBadRequest()
     {
-        // Arrange
-        var request = new CreatePhysicalLibraryRequest("Physical Library",
-            [new CreatePhysicalLibrarySource("//mnt/movies", (MediaKind)999)]);
+        var request = CreateRequest("Physical Library",
+            Source("media", "Movies", (MediaKind)999));
 
-        // Act
-        var (response, problemDetails) =
-            await app.Client.POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(
-                request);
+        var (response, problemDetails) = await app.Client
+            .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        problemDetails.Errors.Should().ContainSingle(error => error.Name == "sources[0].kind");
+        AssertBadRequestFor(response, problemDetails, "sources[0].kind");
     }
+
+    public static bool IsLinux => OperatingSystem.IsLinux();
+
+    private static CreatePhysicalLibraryRequest CreateRequest(string name, params CreatePhysicalLibrarySource[] sources)
+    {
+        return new CreatePhysicalLibraryRequest(name, sources);
+    }
+
+    private static CreatePhysicalLibrarySource Source(
+        string? locationId,
+        string? relativePath,
+        MediaKind kind)
+    {
+        return new CreatePhysicalLibrarySource(locationId!, relativePath!, kind);
+    }
+
+    private static void AssertBadRequestFor(HttpResponseMessage response, ProblemDetails problemDetails, string propertyName)
+    {
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        problemDetails.Status.Should().Be((int)HttpStatusCode.BadRequest);
+        problemDetails.Errors.Should().Contain(error => error.Name == propertyName);
+    }
+
+    private static void AssertRejectedFor(HttpResponseMessage response, ProblemDetails problemDetails, string propertyName)
+    {
+        response.IsSuccessStatusCode.Should().BeFalse();
+        problemDetails.Status.Should().Be((int)response.StatusCode);
+        problemDetails.Errors.Should().Contain(error => error.Name == propertyName);
+    }
+
+    private async Task<IReadOnlyList<PersistedSource>> GetPersistedSourcesAsync(Guid libraryId)
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.OpenConnectionAsync(TestContext.Current.CancellationToken);
+
+        await using var command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText =
+            """
+            SELECT "StorageLocationId", "RelativePath", "MediaKind"
+            FROM "LibrarySource"
+            WHERE "library_id" = @libraryId
+            ORDER BY "StorageLocationId", "RelativePath"
+            """;
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "libraryId";
+        parameter.Value = libraryId;
+        command.Parameters.Add(parameter);
+
+        List<PersistedSource> sources = [];
+        await using var reader = await command.ExecuteReaderAsync(TestContext.Current.CancellationToken);
+        while (await reader.ReadAsync(TestContext.Current.CancellationToken))
+        {
+            sources.Add(new PersistedSource(
+                reader.GetString(0),
+                reader.GetString(1),
+                reader.GetInt32(2)));
+        }
+
+        return sources;
+    }
+
+    private sealed record PersistedSource(
+        string StorageLocationId,
+        string RelativePath,
+        int MediaKind);
 }
