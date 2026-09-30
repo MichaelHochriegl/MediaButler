@@ -4,6 +4,7 @@ namespace Storage.Integration;
 
 public interface IStorageDirectoryResolver
 {
+    /// <exception cref="StoragePathTooLongException">The path exceeds a supported length.</exception>
     /// <exception cref="StorageDirectoryNotFoundException">The directory does not exist.</exception>
     /// <exception cref="StorageDirectoryNotAccessibleException">The directory cannot be read.</exception>
     ResolvedStoragePath ResolveDirectory(StorageLocationId locationId, string relativePath);

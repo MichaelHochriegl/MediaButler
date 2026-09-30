@@ -44,7 +44,11 @@ internal class StorageDirectoryResolver(IStoragePathResolver pathResolver) : ISt
                 path.RelativePath,
                 exception);
         }
-        catch (IOException exception) when (exception is not PathTooLongException)
+        catch (PathTooLongException exception)
+        {
+            throw new StoragePathTooLongException(path.LocationId, path.RelativePath.Value, exception);
+        }
+        catch (IOException exception)
         {
             throw new StorageDirectoryNotAccessibleException(
                 path.LocationId,

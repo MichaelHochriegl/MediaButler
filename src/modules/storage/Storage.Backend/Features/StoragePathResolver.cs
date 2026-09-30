@@ -24,25 +24,30 @@ internal sealed class StoragePathResolver(StorageLocationRegistry locationRegist
             var resolvedPath = Path.GetFullPath(relativePath, location.RootPath);
             resolvedPath = Path.TrimEndingDirectorySeparator(resolvedPath);
             
-            var relPath = Path.GetRelativePath(location.RootPath, resolvedPath);
-            
-            
-            
             if (!IsContainedWithin(location.RootPath, resolvedPath))
             {
                 throw new EscapingStoragePathException(locationId, relativePath);
+            }
+
+            var relPath = Path.GetRelativePath(location.RootPath, resolvedPath);
+            if (relPath.Length > StorageRelativePath.MaxLength || resolvedPath.Length > StorageAbsolutePath.MaxLength)
+            {
+                throw new StoragePathTooLongException(locationId, relativePath);
             }
 
             if (!IsSymlinkFree(location, relativePath))
             {
                 throw new SymlinkStoragePathException(location.Id, relativePath);
             }
-            
+
             storageRelativePath = new StorageRelativePath(relPath);
             storageAbsolutePath = new StorageAbsolutePath(resolvedPath);
         }
-        catch (Exception exception)
-            when(exception is ArgumentException or PathTooLongException)
+        catch (PathTooLongException exception)
+        {
+            throw new StoragePathTooLongException(locationId, relativePath, exception);
+        }
+        catch (ArgumentException exception)
         {
             throw new InvalidStoragePathException(locationId, relativePath, exception);
         }

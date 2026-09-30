@@ -2,7 +2,7 @@ namespace Domain.Storage;
 
 public readonly record struct StorageRelativePath
 {
-    private const int MaxLength = 1024;
+    public const int MaxLength = 1024;
     
     public string Value { get; }
     

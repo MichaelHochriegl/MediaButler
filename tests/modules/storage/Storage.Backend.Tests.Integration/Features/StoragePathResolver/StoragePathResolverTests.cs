@@ -251,6 +251,23 @@ public sealed class StoragePathResolverTests
     }
 
     [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
+    public async Task Given_ResolvedPathExceedsSupportedLength_Should_ReportTooLong()
+    {
+        // Arrange
+        using var host = await StoragePathResolverTestHost.StartAsync(("media", _rootPath));
+        var resolver = host.Services.GetRequiredService<IStoragePathResolver>();
+        var relativePath = new string('a', StorageAbsolutePath.MaxLength - _rootPath.Length);
+
+        // Act
+        var resolve = () => resolver.ResolvePath(MediaLocation, relativePath);
+
+        // Assert
+        var exception = resolve.Should().ThrowExactly<StoragePathTooLongException>().Which;
+        exception.LocationId.Should().Be(MediaLocation);
+        exception.RelativePath.Should().Be(relativePath);
+    }
+
+    [Fact(Skip = "Storage paths require Linux semantics.", SkipUnless = nameof(IsLinux))]
     public async Task Given_UnknownLocation_Should_ReportMissingLocation()
     {
         // Arrange

@@ -73,7 +73,7 @@ public class GetDirectoriesEndpoint(IStorageDirectoryResolver resolver)
             directories.Sort((left, right) => StringComparer.Ordinal.Compare(left.Name, right.Name));
             await Send.OkAsync(new GetDirectoriesResponse(directories), ct);
         }
-        catch (InvalidStoragePathException exception) when (exception.InnerException is PathTooLongException)
+        catch (StoragePathTooLongException)
         {
             ThrowError("The directory path is too long.", 400);
         }
@@ -102,10 +102,6 @@ public class GetDirectoriesEndpoint(IStorageDirectoryResolver resolver)
         catch (UnauthorizedAccessException)
         {
             ThrowError("The directory cannot be read.", 403);
-        }
-        catch (Exception exception) when (exception is ArgumentException or PathTooLongException)
-        {
-            ThrowError("The directory path is too long.", 400);
         }
         catch (IOException)
         {
