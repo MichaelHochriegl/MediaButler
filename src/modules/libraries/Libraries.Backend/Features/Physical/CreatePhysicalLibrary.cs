@@ -46,9 +46,10 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext, IStorageDirec
                 try
                 {
                     var locationId = new StorageLocationId(source.StorageLocationId);
-                    var root = resolver.ResolveDirectory(locationId, string.Empty);
+                    var resolvedDirectory = resolver.ResolveDirectory(locationId, source.RelativePath);
 
-                    sources.Add(new PhysicalLibrarySource((LibraryMediaKind)source.Kind, locationId, root.RelativePath));
+                    sources.Add(new PhysicalLibrarySource((LibraryMediaKind)source.Kind, locationId,
+                        resolvedDirectory.RelativePath));
                 }
                 catch (StorageLocationNotFoundException)
                 {
@@ -62,7 +63,13 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext, IStorageDirec
                         $"sources[{i}].relativePath",
                         "The path is invalid or traverses a symbolic link."));
                 }
+                catch (StorageDirectoryNotFoundException)
+                {
+                    AddError(new FluentValidation.Results.ValidationFailure($"sources[{i}].relativePath",
+                        "The path is invalid or does not exist."));
+                }
             }
+
             ThrowIfAnyErrors();
 
             if (sources.Select(s => new { s.StorageLocationId, s.RelativePath }).Distinct().Count() != sources.Count)
@@ -71,8 +78,23 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext, IStorageDirec
                 return;
             }
 
-            var library = PhysicalLibrary.Create(new LibraryName(req.Name), sources);
+            var locationIds = sources
+                .Select(s => s.StorageLocationId)
+                .Distinct()
+                .ToArray();
 
+            var existingSources = await dbContext.Libs.LibrarySources
+                .OfType<PhysicalLibrarySource>()
+                .AsNoTracking()
+                .Where(s => locationIds.Contains(s.StorageLocationId))
+                .ToListAsync(ct);
+
+            if (sources.Any(s => existingSources.Any(es => es.OverlapsWith(s))))
+            {
+                ThrowError(r => r.Sources, $"One or more source paths overlap sources managed by another library.");
+            }
+            
+            var library = PhysicalLibrary.Create(new LibraryName(req.Name), sources);
 
             dbContext.Add(library);
             await dbContext.SaveChangesAsync(ct);
@@ -95,6 +117,10 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext, IStorageDirec
                                           })
         {
             ThrowError(r => r.Sources, "One or more sources paths are already managed by another library");
+        }
+        catch (OverlappingPhysicalLibrarySourceException)
+        {
+            ThrowError(r => r.Sources, "One or more source paths are overlapping each other");
         }
     }
 }

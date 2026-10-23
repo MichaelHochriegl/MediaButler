@@ -60,8 +60,7 @@ public sealed class PhysicalLibrary : Library
     {
         if (_sources.Any(x => x.OverlapsWith(source)))
         {
-            throw new InvalidOperationException(
-                $"The physical library already has the path '{source.StorageLocationId}' '{source.RelativePath}' assigned");
+            throw new OverlappingPhysicalLibrarySourceException(source.StorageLocationId, source.RelativePath);
         }
 
         _sources.Add(source);

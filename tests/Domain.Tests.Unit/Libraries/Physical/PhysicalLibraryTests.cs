@@ -49,17 +49,22 @@ public sealed class PhysicalLibraryTests
         act.Should().Throw<ArgumentException>();
     }
 
-    [Fact]
-    public void Create_WithDuplicatePath_ThrowsInvalidOperationException()
+    [Theory]
+    [InlineData("movies", "movies")]
+    [InlineData("movies", "movies/action")]
+    [InlineData("movies/action", "movies")]
+    public void Create_WithOverlappingSource_ThrowsDomainException(string firstPath, string secondPath)
     {
-        var first = CreateSource("movies");
-        var duplicate = CreateSource("movies");
+        var first = CreateSource(firstPath);
+        var duplicate = CreateSource(secondPath);
 
         var act = () => PhysicalLibrary.Create(
             new LibraryName("Movies"),
             [first, duplicate]);
 
-        act.Should().Throw<InvalidOperationException>();
+        var exception = act.Should().ThrowExactly<OverlappingPhysicalLibrarySourceException>().Which;
+        exception.StorageLocationId.Should().Be(duplicate.StorageLocationId);
+        exception.RelativePath.Should().Be(duplicate.RelativePath);
     }
 
     [Fact]
@@ -111,17 +116,22 @@ public sealed class PhysicalLibraryTests
         library.UpdatedAt.Value.Should().BeOnOrBefore(afterAddition);
     }
 
-    [Fact]
-    public void AddSource_WithDuplicatePath_ThrowsWithoutChangingLibrary()
+    [Theory]
+    [InlineData("movies")]
+    [InlineData("movies/action")]
+    [InlineData(".")]
+    public void AddSource_WithOverlappingPath_ThrowsWithoutChangingLibrary(string relativePath)
     {
         var library = CreateLibrary();
         var storageLocationId = new StorageLocationId("media");
-        var storageRelativePath = new StorageRelativePath("movies");
+        var storageRelativePath = new StorageRelativePath(relativePath);
 
         var act = () => library.AddSource(
             LibraryMediaKind.TvShows, storageLocationId, storageRelativePath);
 
-        act.Should().Throw<InvalidOperationException>();
+        var exception = act.Should().ThrowExactly<OverlappingPhysicalLibrarySourceException>().Which;
+        exception.StorageLocationId.Should().Be(storageLocationId);
+        exception.RelativePath.Should().Be(storageRelativePath);
         library.Sources.Should().ContainSingle();
         library.UpdatedAt.Should().BeNull();
     }
