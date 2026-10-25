@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 using AwesomeAssertions;
 using FastEndpoints;
 using FastEndpoints.Testing;
@@ -105,6 +106,74 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         responses.Should().OnlyContain(response =>
             response.StatusCode == HttpStatusCode.Created ||
             response.StatusCode == HttpStatusCode.BadRequest);
+    }
+
+    [Theory]
+    [InlineData("Movies", "Movies/Action")]
+    [InlineData("Movies/Action", "Movies")]
+    public async Task Given_ConcurrentOverlappingSourcesWithDifferentNames_Should_PersistOnlyTheFirstLibrary(
+        string firstPath,
+        string secondPath)
+    {
+        using var timeout = CancellationTokenSource.CreateLinkedTokenSource(TestContext.Current.CancellationToken);
+        timeout.CancelAfter(TimeSpan.FromSeconds(30));
+        var ct = timeout.Token;
+
+        var first = CreateRequest("First Concurrent Library", Source("media", firstPath, MediaKind.Movies));
+        var second = CreateRequest("Second Concurrent Library", Source("media", secondPath, MediaKind.Movies));
+
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.OpenConnectionAsync(ct);
+        var connection = db.Database.GetDbConnection();
+        await using var gate = await connection.BeginTransactionAsync(ct);
+        await using var command = connection.CreateCommand();
+        command.Transaction = gate;
+        command.CommandText = "SELECT pg_backend_pid()";
+        var gatePid = Convert.ToInt32(await command.ExecuteScalarAsync(ct));
+
+        // Allow validation reads, but hold inserts until both requests are contending.
+        command.CommandText = """LOCK TABLE "Library" IN SHARE MODE""";
+        await command.ExecuteNonQueryAsync(ct);
+
+        List<Task> pendingRequests = [];
+        try
+        {
+            var firstTask = app.Client.PostAsJsonAsync("/api/libraries/physical", first, ct);
+            pendingRequests.Add(firstTask);
+            await WaitForBlockedCreatesAsync(gatePid, 1, ct);
+
+            var secondTask = app.Client.PostAsJsonAsync("/api/libraries/physical", second, ct);
+            pendingRequests.Add(secondTask);
+            await WaitForBlockedCreatesAsync(gatePid, 2, ct);
+
+            await gate.CommitAsync(ct);
+
+            using var firstResponse = await firstTask;
+            using var secondResponse = await secondTask;
+            firstResponse.StatusCode.Should().Be(HttpStatusCode.Created);
+
+            var problem = await secondResponse.Content.ReadFromJsonAsync<ProblemDetails>(ct)
+                          ?? throw new InvalidOperationException("Expected validation problem details.");
+            AssertBadRequestFor(secondResponse, problem, "sources");
+
+            var created = await firstResponse.Content.ReadFromJsonAsync<CreatePhysicalLibraryResponse>(ct)
+                          ?? throw new InvalidOperationException("Expected a created library response.");
+            created.Id.Should().NotBeEmpty();
+
+            var libraryIds = await db.Libs.Libraries.Select(library => library.Id).ToArrayAsync(ct);
+            libraryIds.Should().Equal(created.Id);
+
+            var persistedSources = await GetPersistedSourcesAsync(created.Id);
+            persistedSources.Should().Equal(new PersistedSource("media", firstPath, (int)MediaKind.Movies));
+        }
+        finally
+        {
+            await gate.DisposeAsync();
+            await timeout.CancelAsync();
+            await Task.WhenAll(pendingRequests).ConfigureAwait(
+                ConfigureAwaitOptions.ContinueOnCapturedContext | ConfigureAwaitOptions.SuppressThrowing);
+        }
     }
 
     [Fact]
@@ -374,6 +443,31 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         response.IsSuccessStatusCode.Should().BeFalse();
         problemDetails.Status.Should().Be((int)response.StatusCode);
         problemDetails.Errors.Should().Contain(error => error.Name == propertyName);
+    }
+
+    private async Task WaitForBlockedCreatesAsync(int gatePid, int expectedCount, CancellationToken ct)
+    {
+        await using var scope = app.Services.CreateAsyncScope();
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await db.Database.OpenConnectionAsync(ct);
+        await using var command = db.Database.GetDbConnection().CreateCommand();
+        command.CommandText =
+            """
+            SELECT count(*)
+            FROM pg_stat_activity
+            WHERE datname = current_database()
+              AND wait_event_type = 'Lock'
+              AND (@gatePid = ANY(pg_blocking_pids(pid)) OR wait_event = 'advisory')
+            """;
+        var parameter = command.CreateParameter();
+        parameter.ParameterName = "gatePid";
+        parameter.Value = gatePid;
+        command.Parameters.Add(parameter);
+
+        while (Convert.ToInt64(await command.ExecuteScalarAsync(ct)) < expectedCount)
+        {
+            await Task.Delay(TimeSpan.FromMilliseconds(20), ct);
+        }
     }
 
     private async Task<IReadOnlyList<PersistedSource>> GetPersistedSourcesAsync(Guid libraryId)

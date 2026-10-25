@@ -1,16 +1,21 @@
+using System.Data;
 using Domain.Libraries;
 using Domain.Libraries.Physical;
 using Domain.Storage;
 using FastEndpoints;
 using Libraries.Contracts.Features.Physical;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using Persistence;
 using Storage.Integration;
 
 namespace Libraries.Backend.Features.Physical;
 
-public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext, IStorageDirectoryResolver resolver)
+public class CreatePhysicalLibraryEndpoint(
+    IServiceScopeFactory scopeFactory,
+    AppDbContext dbContext,
+    IStorageDirectoryResolver resolver)
     : Endpoint<CreatePhysicalLibraryRequest, CreatePhysicalLibraryResponse>
 {
     public override void Configure()
@@ -83,24 +88,47 @@ public class CreatePhysicalLibraryEndpoint(AppDbContext dbContext, IStorageDirec
                 .Distinct()
                 .ToArray();
 
-            var existingSources = await dbContext.Libs.LibrarySources
-                .OfType<PhysicalLibrarySource>()
-                .AsNoTracking()
-                .Where(s => locationIds.Contains(s.StorageLocationId))
-                .ToListAsync(ct);
+            var strategy = dbContext.Database.CreateExecutionStrategy();
 
-            if (sources.Any(s => existingSources.Any(es => es.OverlapsWith(s))))
+            var libraryId = await strategy.ExecuteAsync<Guid>(async attempCt =>
             {
-                ThrowError(r => r.Sources, $"One or more source paths overlap sources managed by another library.");
-            }
-            
-            var library = PhysicalLibrary.Create(new LibraryName(req.Name), sources);
+                await using var scope = scopeFactory.CreateAsyncScope();
+                var attempContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await using var transaction = await attempContext.Database
+                    .BeginTransactionAsync(IsolationLevel.ReadCommitted, attempCt);
 
-            dbContext.Add(library);
-            await dbContext.SaveChangesAsync(ct);
+                await attempContext.Database.AcquirePhysicalLibrarySourceLocks(locationIds, attempCt);
 
-            await Send.CreatedAtAsync<GetLibraryByIdEndpoint>(new { id = library.Id },
-                new CreatePhysicalLibraryResponse(library.Id), cancellation: ct);
+                var existingSources = await dbContext.Libs.LibrarySources
+                    .OfType<PhysicalLibrarySource>()
+                    .AsNoTracking()
+                    .Where(s => locationIds.Contains(s.StorageLocationId))
+                    .ToListAsync(attempCt);
+
+                if (sources.Any(s => existingSources.Any(es => es.OverlapsWith(s))))
+                {
+                    ThrowError(r => r.Sources,
+                        "One or more source paths overlap sources managed by another library.");
+                }
+
+                var attemptSources = sources
+                    .Select(s => new PhysicalLibrarySource(s.MediaKind,
+                        s.StorageLocationId,
+                        s.RelativePath))
+                    .ToArray();
+
+                var library = PhysicalLibrary.Create(new LibraryName(req.Name), attemptSources);
+
+                attempContext.Add(library);
+                await attempContext.SaveChangesAsync(attempCt);
+                await transaction.CommitAsync(attempCt);
+
+                return library.Id;
+            }, ct);
+
+
+            await Send.CreatedAtAsync<GetLibraryByIdEndpoint>(new { id = libraryId },
+                new CreatePhysicalLibraryResponse(libraryId), cancellation: ct);
         }
         catch (DbUpdateException e) when (e.InnerException is PostgresException
                                           {
