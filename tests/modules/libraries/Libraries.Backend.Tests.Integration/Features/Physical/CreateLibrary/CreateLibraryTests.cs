@@ -318,6 +318,47 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
         AssertRejectedFor(response, problemDetails, "sources[0].relativePath");
     }
 
+    [Fact(Skip = "Directory permissions require Linux semantics.", SkipUnless = nameof(IsLinux))]
+    public async Task Given_UnreadableSourceDirectory_Should_ReturnBadRequestWithoutPersistingLibrary()
+    {
+        if (!OperatingSystem.IsLinux())
+            return;
+
+        var directory = Directory.CreateDirectory(Path.Combine(app.MediaRootPath, "restricted"));
+        var originalMode = File.GetUnixFileMode(directory.FullName);
+        try
+        {
+            File.SetUnixFileMode(directory.FullName, UnixFileMode.None);
+            // Privileged test runners may bypass filesystem permissions.
+            var canRead = true;
+            try
+            {
+                Directory.GetFileSystemEntries(directory.FullName);
+            }
+            catch (UnauthorizedAccessException)
+            {
+                canRead = false;
+            }
+            Assert.SkipWhen(canRead, "The test runner bypasses filesystem permissions.");
+
+            var request = CreateRequest("Physical Library",
+                Source("media", "Movies", MediaKind.Movies),
+                Source("media", directory.Name, MediaKind.TvShows));
+
+            var (response, problemDetails) = await app.Client
+                .POSTAsync<CreatePhysicalLibraryEndpoint, CreatePhysicalLibraryRequest, ProblemDetails>(request);
+
+            AssertBadRequestFor(response, problemDetails, "sources[1].relativePath");
+            problemDetails.Errors.Should().ContainSingle()
+                .Which.Reason.Should().Be("The storage directory is not accessible.");
+        }
+        finally
+        {
+            File.SetUnixFileMode(directory.FullName, originalMode);
+            directory.Delete();
+        }
+    }
+
     [Fact]
     public async Task Given_TargetIsAFile_Should_ReturnBadRequest()
     {

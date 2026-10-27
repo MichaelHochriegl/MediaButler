@@ -62,6 +62,12 @@ public class CreatePhysicalLibraryEndpoint(
                         $"sources[{i}].storageLocationId",
                         "The storage location is not configured."));
                 }
+                catch (StorageDirectoryNotAccessibleException)
+                {
+                    AddError(new FluentValidation.Results.ValidationFailure(
+                        $"sources[{i}].relativePath",
+                        "The storage directory is not accessible."));
+                }
                 catch (InvalidStoragePathException)
                 {
                     AddError(new FluentValidation.Results.ValidationFailure(
