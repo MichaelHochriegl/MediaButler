@@ -20,6 +20,7 @@ public class GetDirectoriesAppFixture : AppFixture<Program>
         Directory.CreateDirectory(Path.Combine(RootPath, "TV Shows"));
         Directory.CreateDirectory(Path.Combine(RootPath, ".hidden"));
         await File.WriteAllTextAsync(Path.Combine(RootPath, "movie.mkv"), "test");
+        await File.WriteAllTextAsync(Path.Combine(_temporaryDirectory.FullName, "movie.mkv"), "test");
         await File.WriteAllTextAsync(Path.Combine(RootPath, "Movies", "film.mkv"), "test");
 
         if (OperatingSystem.IsLinux())
@@ -45,7 +46,7 @@ public class GetDirectoriesAppFixture : AppFixture<Program>
         a.UseSetting($"ConnectionStrings:{Descriptors.Database}", _databaseContainer.GetConnectionString());
         AddLocation(a, "media", "Media library", RootPath);
         AddLocation(a, "offline", "Offline storage", Path.Combine(_temporaryDirectory.FullName, "missing"));
-        AddLocation(a, "file-root", "Invalid mount", Path.Combine(RootPath, "movie.mkv"));
+        AddLocation(a, "file-root", "Invalid mount", Path.Combine(_temporaryDirectory.FullName, "movie.mkv"));
         AddLocation(a, "changing", "Removable storage", ChangingRootPath);
         if (OperatingSystem.IsLinux())
             AddLocation(a, "linked-root", "Linked storage", Path.Combine(_temporaryDirectory.FullName, "linked-root"));
