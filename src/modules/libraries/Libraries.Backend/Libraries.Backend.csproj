@@ -8,6 +8,7 @@
       <ProjectReference Include="..\..\..\Domain\Domain.csproj" />
       <ProjectReference Include="..\..\..\Persistence\Persistence.csproj" />
       <ProjectReference Include="..\..\Modules.Common\Modules.Common.csproj" />
+      <ProjectReference Include="..\..\storage\Storage.Integration\Storage.Integration.csproj" />
       <ProjectReference Include="..\Libraries.Contracts\Libraries.Contracts.csproj" />
     </ItemGroup>
 

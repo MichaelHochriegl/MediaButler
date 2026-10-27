@@ -34,9 +34,10 @@ public enum MediaKind
 /// <summary>
 /// Physical source configuration for a library.
 /// </summary>
-/// <param name="Path">The physical file system path for this source.</param>
+/// <param name="StorageLocationId">The configured storage location ID.</param>
+/// <param name="RelativePath">The directory path relative to the storage location.</param>
 /// <param name="Kind">The media kind available from this source.</param>
-public record CreatePhysicalLibrarySource(string Path, MediaKind Kind);
+public record CreatePhysicalLibrarySource(string StorageLocationId, string RelativePath, MediaKind Kind);
 
 
 public class CreatePhysicalLibraryRequestValidator : AbstractValidator<CreatePhysicalLibraryRequest>
@@ -64,7 +65,12 @@ public class CreatePhysicalLibrarySourceValidator : AbstractValidator<CreatePhys
     public CreatePhysicalLibrarySourceValidator()
     {
         RuleFor(x => x).NotNull();
-        RuleFor(x => x.Path)
+        RuleFor(x => x.StorageLocationId)
+            .NotEmpty()
+            .Must(p => !string.IsNullOrWhiteSpace(p) && !p.Contains('\0') && string.Equals(p, p.Trim(), StringComparison.Ordinal))
+            .MaximumLength(PhysicalPathMaxLength);
+
+        RuleFor(x => x.RelativePath)
             .NotEmpty()
             .Must(p => !string.IsNullOrEmpty(p) && !p.Contains('\0'))
             .MaximumLength(PhysicalPathMaxLength);

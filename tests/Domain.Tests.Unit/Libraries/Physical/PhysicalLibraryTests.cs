@@ -1,6 +1,7 @@
 using AwesomeAssertions;
 using Domain.Libraries;
 using Domain.Libraries.Physical;
+using Domain.Storage;
 
 namespace Domain.Tests.Unit.Libraries.Physical;
 
@@ -10,7 +11,7 @@ public sealed class PhysicalLibraryTests
     public void Create_WithSource_InitializesLibrary()
     {
         var name = new LibraryName("Movies");
-        var source = CreateSource("/media/movies");
+        var source = CreateSource("movies");
         var beforeCreation = DateTimeOffset.UtcNow;
 
         var library = PhysicalLibrary.Create(name, [source]);
@@ -32,7 +33,7 @@ public sealed class PhysicalLibraryTests
         var library = CreateLibrary();
         var sources = (ICollection<PhysicalLibrarySource>)library.Sources;
 
-        var act = () => sources.Add(CreateSource("/media/tv"));
+        var act = () => sources.Add(CreateSource("tv"));
 
         act.Should().Throw<NotSupportedException>();
         library.Sources.Should().ContainSingle();
@@ -48,17 +49,22 @@ public sealed class PhysicalLibraryTests
         act.Should().Throw<ArgumentException>();
     }
 
-    [Fact]
-    public void Create_WithDuplicatePath_ThrowsInvalidOperationException()
+    [Theory]
+    [InlineData("movies", "movies")]
+    [InlineData("movies", "movies/action")]
+    [InlineData("movies/action", "movies")]
+    public void Create_WithOverlappingSource_ThrowsDomainException(string firstPath, string secondPath)
     {
-        var first = CreateSource("/media/movies");
-        var duplicate = CreateSource(" /media/movies/ ");
+        var first = CreateSource(firstPath);
+        var duplicate = CreateSource(secondPath);
 
         var act = () => PhysicalLibrary.Create(
             new LibraryName("Movies"),
             [first, duplicate]);
 
-        act.Should().Throw<InvalidOperationException>();
+        var exception = act.Should().ThrowExactly<OverlappingPhysicalLibrarySourceException>().Which;
+        exception.StorageLocationId.Should().Be(duplicate.StorageLocationId);
+        exception.RelativePath.Should().Be(duplicate.RelativePath);
     }
 
     [Fact]
@@ -93,31 +99,39 @@ public sealed class PhysicalLibraryTests
     public void AddSource_WithUniquePath_AddsSourceAndMarksLibraryAsUpdated()
     {
         var library = CreateLibrary();
-        var path = new PhysicalPath("/media/tv");
+        var storageLocationId = new StorageLocationId("media");
+        var storageRelativePath = new StorageRelativePath("tv");
         var beforeAddition = DateTimeOffset.UtcNow;
 
-        library.AddSource(LibraryMediaKind.TvShows, path);
+        library.AddSource(LibraryMediaKind.TvShows, storageLocationId, storageRelativePath);
 
         var afterAddition = DateTimeOffset.UtcNow;
         library.Sources.Should().HaveCount(2);
         library.Sources.Should().ContainSingle(source =>
             source.MediaKind == LibraryMediaKind.TvShows &&
-            source.Path == path);
+            source.StorageLocationId == storageLocationId &&
+            source.RelativePath == storageRelativePath);
         library.UpdatedAt.Should().NotBeNull();
         library.UpdatedAt!.Value.Should().BeOnOrAfter(beforeAddition);
         library.UpdatedAt.Value.Should().BeOnOrBefore(afterAddition);
     }
 
-    [Fact]
-    public void AddSource_WithDuplicatePath_ThrowsWithoutChangingLibrary()
+    [Theory]
+    [InlineData("movies")]
+    [InlineData("movies/action")]
+    [InlineData(".")]
+    public void AddSource_WithOverlappingPath_ThrowsWithoutChangingLibrary(string relativePath)
     {
         var library = CreateLibrary();
+        var storageLocationId = new StorageLocationId("media");
+        var storageRelativePath = new StorageRelativePath(relativePath);
 
         var act = () => library.AddSource(
-            LibraryMediaKind.TvShows,
-            new PhysicalPath(" /media/movies/ "));
+            LibraryMediaKind.TvShows, storageLocationId, storageRelativePath);
 
-        act.Should().Throw<InvalidOperationException>();
+        var exception = act.Should().ThrowExactly<OverlappingPhysicalLibrarySourceException>().Which;
+        exception.StorageLocationId.Should().Be(storageLocationId);
+        exception.RelativePath.Should().Be(storageRelativePath);
         library.Sources.Should().ContainSingle();
         library.UpdatedAt.Should().BeNull();
     }
@@ -125,8 +139,8 @@ public sealed class PhysicalLibraryTests
     [Fact]
     public void RemoveSource_WithExistingSource_RemovesSourceAndMarksLibraryAsUpdated()
     {
-        var movies = CreateSource("/media/movies");
-        var tvShows = CreateSource("/media/tv", LibraryMediaKind.TvShows);
+        var movies = CreateSource("movies");
+        var tvShows = CreateSource("tv", LibraryMediaKind.TvShows);
         var library = PhysicalLibrary.Create(
             new LibraryName("Videos"),
             [movies, tvShows]);
@@ -145,12 +159,12 @@ public sealed class PhysicalLibraryTests
     [Fact]
     public void RemoveSource_WithUnknownSource_ThrowsWithoutChangingLibrary()
     {
-        var existing = CreateSource("/media/movies");
+        var existing = CreateSource("movies");
         var library = PhysicalLibrary.Create(
             new LibraryName("Movies"),
-            [existing, CreateSource("/media/archive")]);
+            [existing, CreateSource("archive")]);
 
-        var act = () => library.RemoveSource(CreateSource("/media/unknown"));
+        var act = () => library.RemoveSource(CreateSource("unknown"));
 
         act.Should().Throw<InvalidOperationException>();
         library.Sources.Should().HaveCount(2);
@@ -160,7 +174,7 @@ public sealed class PhysicalLibraryTests
     [Fact]
     public void RemoveSource_WithOnlySource_ThrowsWithoutChangingLibrary()
     {
-        var source = CreateSource("/media/movies");
+        var source = CreateSource("movies");
         var library = PhysicalLibrary.Create(new LibraryName("Movies"), [source]);
 
         var act = () => library.RemoveSource(source);
@@ -175,13 +189,13 @@ public sealed class PhysicalLibraryTests
     {
         return PhysicalLibrary.Create(
             name ?? new LibraryName("Movies"),
-            [CreateSource("/media/movies")]);
+            [CreateSource("movies")]);
     }
 
     private static PhysicalLibrarySource CreateSource(
-        string path,
+        string relativePath,
         LibraryMediaKind mediaKind = LibraryMediaKind.Movies)
     {
-        return new PhysicalLibrarySource(mediaKind, new PhysicalPath(path));
+        return new PhysicalLibrarySource(mediaKind, new StorageLocationId("media"), new StorageRelativePath(relativePath));
     }
 }

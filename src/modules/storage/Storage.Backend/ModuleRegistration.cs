@@ -39,6 +39,7 @@ public static class ModuleRegistration
 
             builder.Services.AddSingleton<StorageLocationRegistry>();
             builder.Services.AddSingleton<IStoragePathResolver, StoragePathResolver>();
+            builder.Services.AddSingleton<IStorageDirectoryResolver, StorageDirectoryResolver>();
 
             builder.Services.AddOptions<StorageOptions>()
                 .Bind(builder.Configuration.GetSection(StorageOptions.SectionName))

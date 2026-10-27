@@ -10,10 +10,14 @@ namespace Libraries.Backend.Tests.Integration.Features.GetLibraryById;
 
 public class GetLibraryByIdAppFixture : AppFixture<Program>
 {
+    private readonly DirectoryInfo _temporaryDirectory =
+        Directory.CreateTempSubdirectory("media-butler-get-library-tests-");
     private PostgreSqlContainer _databaseContainer = null!;
 
     protected override async ValueTask PreSetupAsync()
     {
+        Directory.CreateDirectory(Path.Combine(_temporaryDirectory.FullName, "Movies"));
+
         _databaseContainer = new PostgreSqlBuilder($"postgres:{Tags.PostgresTag}")
             .WithDatabase("media-butler-libraries-test")
             .WithUsername("libraries-user")
@@ -26,6 +30,8 @@ public class GetLibraryByIdAppFixture : AppFixture<Program>
     protected override void ConfigureApp(IWebHostBuilder a)
     {
         a.UseSetting($"ConnectionStrings:{Descriptors.Database}", _databaseContainer.GetConnectionString());
+        a.UseSetting("Storage:Locations:media:DisplayName", "Media");
+        a.UseSetting("Storage:Locations:media:RootPath", _temporaryDirectory.FullName);
     }
 
     public async Task ResetDatabaseAsync()
@@ -36,5 +42,11 @@ public class GetLibraryByIdAppFixture : AppFixture<Program>
         await db.Database.ExecuteSqlRawAsync("""
                                              TRUNCATE TABLE "LibrarySource", "Library" RESTART IDENTITY CASCADE;
                                              """);
+    }
+
+    protected override async ValueTask TearDownAsync()
+    {
+        await _databaseContainer.DisposeAsync();
+        _temporaryDirectory.Delete(recursive: true);
     }
 }

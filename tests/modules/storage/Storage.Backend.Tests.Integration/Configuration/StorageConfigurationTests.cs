@@ -102,6 +102,39 @@ public class StorageConfigurationTests
         await startHost.Should().ThrowAsync<OptionsValidationException>();
     }
 
+    [Theory]
+    [InlineData("/mnt/media", "/mnt/media/Movies")]
+    [InlineData("/mnt/media/Movies", "/mnt/media")]
+    [InlineData("/mnt/media/", "/mnt/media/Movies/Action/..")]
+    [InlineData("/", "/mnt/media")]
+    [InlineData("/mnt/media", "/")]
+    public async Task Given_NestedRootPaths_Should_RejectStartup(string firstRoot, string secondRoot)
+    {
+        var configuration = Location("media", "Media", firstRoot);
+        foreach (var entry in Location("movies", "Movies", secondRoot))
+            configuration.Add(entry.Key, entry.Value);
+
+        var startHost = () => StartHostAsync(configuration);
+
+        var exception = await startHost.Should().ThrowAsync<OptionsValidationException>();
+        exception.Which.Failures.Should().ContainSingle()
+            .Which.Should().Contain("media").And.Contain("movies").And.Contain("overlap");
+    }
+
+    [Theory]
+    [InlineData("/media", "/media-archive")]
+    [InlineData("/media/movies", "/media/shows")]
+    public async Task Given_NonOverlappingRootPaths_Should_Start(string firstRoot, string secondRoot)
+    {
+        var configuration = Location("media", "Media", firstRoot);
+        foreach (var entry in Location("archive", "Archive", secondRoot))
+            configuration.Add(entry.Key, entry.Value);
+
+        var startHost = () => StartHostAsync(configuration);
+
+        await startHost.Should().NotThrowAsync();
+    }
+
     [Fact]
     public async Task Given_ValidNonexistentAbsoluteRootPath_Should_Start()
     {

@@ -66,13 +66,31 @@ internal sealed class StorageOptionsValidator
                 continue;
             }
 
-            if (!roots.TryAdd(normalizedRoot, id))
-                errors.Add(
-                    $"Storage locations '{roots[normalizedRoot]}' and '{id}' use the same root path '{normalizedRoot}'.");
+            foreach (var (existingRoot, existingId) in roots)
+            {
+                if (normalizedRoot == existingRoot)
+                    errors.Add(
+                        $"Storage locations '{existingId}' and '{id}' use the same root path '{normalizedRoot}'.");
+                else if (IsNestedWithin(normalizedRoot, existingRoot)
+                         || IsNestedWithin(existingRoot, normalizedRoot))
+                    errors.Add(
+                        $"Storage locations '{existingId}' and '{id}' have overlapping root paths '{existingRoot}' and '{normalizedRoot}'.");
+            }
+
+            roots.TryAdd(normalizedRoot, id);
         }
 
         return errors.Count == 0
             ? ValidateOptionsResult.Success
             : ValidateOptionsResult.Fail(errors);
+    }
+
+    private static bool IsNestedWithin(string path, string root)
+    {
+        var prefix = Path.EndsInDirectorySeparator(root)
+            ? root
+            : root + Path.DirectorySeparatorChar;
+
+        return path.StartsWith(prefix, StringComparison.Ordinal);
     }
 }

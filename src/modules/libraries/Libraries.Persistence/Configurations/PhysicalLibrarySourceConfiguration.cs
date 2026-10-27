@@ -1,4 +1,5 @@
 using Domain.Libraries.Physical;
+using Domain.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -10,14 +11,20 @@ public class PhysicalLibrarySourceConfiguration : IEntityTypeConfiguration<Physi
 
     public void Configure(EntityTypeBuilder<PhysicalLibrarySource> builder)
     {
-        builder.Property(x => x.Path)
+        builder.Property(x => x.StorageLocationId)
+            .HasConversion(
+                location => location.Value,
+                value => new StorageLocationId(value))
+            .IsRequired();
+        
+        builder.Property(x => x.RelativePath)
             .HasConversion(
                 path => path.Value,
-                value => new PhysicalPath(value))
+                value => new StorageRelativePath(value))
             .HasMaxLength(PhysicalPathMaxLength)
             .IsRequired();
 
-        builder.HasIndex(x => x.Path)
+        builder.HasIndex(x => new { x.StorageLocationId, x.RelativePath })
             .IsUnique();
     }
 }

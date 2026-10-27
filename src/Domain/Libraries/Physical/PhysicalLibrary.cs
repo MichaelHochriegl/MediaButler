@@ -1,3 +1,5 @@
+using Domain.Storage;
+
 namespace Domain.Libraries.Physical;
 
 public sealed class PhysicalLibrary : Library
@@ -32,9 +34,9 @@ public sealed class PhysicalLibrary : Library
         return new PhysicalLibrary(name, sources);
     }
 
-    public void AddSource(LibraryMediaKind mediaKind, PhysicalPath path)
+    public void AddSource(LibraryMediaKind mediaKind, StorageLocationId storageLocationId, StorageRelativePath storageRelativePath)
     {
-        AddSourceInternal(new PhysicalLibrarySource(mediaKind, path));
+        AddSourceInternal(new PhysicalLibrarySource(mediaKind, storageLocationId, storageRelativePath));
         MarkUpdated();
     }
 
@@ -56,10 +58,9 @@ public sealed class PhysicalLibrary : Library
 
     private void AddSourceInternal(PhysicalLibrarySource source)
     {
-        if (_sources.Any(x => x.Path == source.Path))
+        if (_sources.Any(x => x.OverlapsWith(source)))
         {
-            throw new InvalidOperationException(
-                $"The physical library already has the path '{source.Path.Value}' assigned");
+            throw new OverlappingPhysicalLibrarySourceException(source.StorageLocationId, source.RelativePath);
         }
 
         _sources.Add(source);

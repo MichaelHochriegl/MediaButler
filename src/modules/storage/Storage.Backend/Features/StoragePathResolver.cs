@@ -5,7 +5,7 @@ namespace Storage.Backend.Features;
 
 internal sealed class StoragePathResolver(StorageLocationRegistry locationRegistry) : IStoragePathResolver
 {
-    public string ResolvePath(StorageLocationId locationId, string relativePath)
+    public ResolvedStoragePath ResolvePath(StorageLocationId locationId, string relativePath)
     {
         if (!locationRegistry.TryGet(locationId, out var location))
         {
@@ -17,29 +17,45 @@ internal sealed class StoragePathResolver(StorageLocationRegistry locationRegist
             throw new RootedStoragePathException(locationId, relativePath);
         }
 
-        string resolvedPath;
+        StorageRelativePath storageRelativePath;
+        StorageAbsolutePath storageAbsolutePath;
         try
         {
-            resolvedPath = Path.GetFullPath(relativePath, location.RootPath);
+            var resolvedPath = Path.GetFullPath(relativePath, location.RootPath);
+            resolvedPath = Path.TrimEndingDirectorySeparator(resolvedPath);
             
             if (!IsContainedWithin(location.RootPath, resolvedPath))
             {
                 throw new EscapingStoragePathException(locationId, relativePath);
             }
 
+            var relPath = Path.GetRelativePath(location.RootPath, resolvedPath);
+            if (relPath.Length > StorageRelativePath.MaxLength || resolvedPath.Length > StorageAbsolutePath.MaxLength)
+            {
+                throw new StoragePathTooLongException(locationId, relativePath);
+            }
+
             if (!IsSymlinkFree(location, relativePath))
             {
                 throw new SymlinkStoragePathException(location.Id, relativePath);
             }
+
+            storageRelativePath = new StorageRelativePath(relPath);
+            storageAbsolutePath = new StorageAbsolutePath(resolvedPath);
         }
-        catch (Exception exception)
-            when(exception is ArgumentException or PathTooLongException)
+        catch (PathTooLongException exception)
+        {
+            throw new StoragePathTooLongException(locationId, relativePath, exception);
+        }
+        catch (ArgumentException exception)
         {
             throw new InvalidStoragePathException(locationId, relativePath, exception);
         }
-
-
-        return resolvedPath;
+        
+        return new ResolvedStoragePath(
+            locationId,
+            storageRelativePath,
+            storageAbsolutePath);
     }
 
     private static bool IsContainedWithin(string root, string path)
