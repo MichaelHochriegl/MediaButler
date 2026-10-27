@@ -241,6 +241,11 @@ public class CreateLibraryTests(CreateLibraryAppFixture app) : TestBase<CreateLi
     [InlineData(null)]
     [InlineData("")]
     [InlineData(" ")]
+    [InlineData(" media")]
+    [InlineData("media ")]
+    [InlineData(" media ")]
+    [InlineData("\tmedia")]
+    [InlineData("media\t")]
     public async Task Given_InvalidStorageLocationId_Should_ReturnBadRequest(string? locationId)
     {
         var request = CreateRequest("Physical Library",

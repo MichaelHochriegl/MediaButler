@@ -67,7 +67,7 @@ public class CreatePhysicalLibrarySourceValidator : AbstractValidator<CreatePhys
         RuleFor(x => x).NotNull();
         RuleFor(x => x.StorageLocationId)
             .NotEmpty()
-            .Must(p => !string.IsNullOrEmpty(p) && !p.Contains('\0'))
+            .Must(p => !string.IsNullOrWhiteSpace(p) && !p.Contains('\0') && string.Equals(p, p.Trim(), StringComparison.Ordinal))
             .MaximumLength(PhysicalPathMaxLength);
 
         RuleFor(x => x.RelativePath)
