@@ -96,20 +96,20 @@ public class CreatePhysicalLibraryEndpoint(
 
             var strategy = dbContext.Database.CreateExecutionStrategy();
 
-            var libraryId = await strategy.ExecuteAsync<Guid>(async attempCt =>
+            var libraryId = await strategy.ExecuteAsync(async attemptCt =>
             {
                 await using var scope = scopeFactory.CreateAsyncScope();
-                var attempContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-                await using var transaction = await attempContext.Database
-                    .BeginTransactionAsync(IsolationLevel.ReadCommitted, attempCt);
+                var attemptContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                await using var transaction = await attemptContext.Database
+                    .BeginTransactionAsync(IsolationLevel.ReadCommitted, attemptCt);
 
-                await attempContext.Database.AcquirePhysicalLibrarySourceLocks(locationIds, attempCt);
+                await attemptContext.Database.AcquirePhysicalLibrarySourceLocks(locationIds, attemptCt);
 
-                var existingSources = await dbContext.Libs.LibrarySources
+                var existingSources = await attemptContext.Libs.LibrarySources
                     .OfType<PhysicalLibrarySource>()
                     .AsNoTracking()
                     .Where(s => locationIds.Contains(s.StorageLocationId))
-                    .ToListAsync(attempCt);
+                    .ToListAsync(attemptCt);
 
                 if (sources.Any(s => existingSources.Any(es => es.OverlapsWith(s))))
                 {
@@ -125,9 +125,9 @@ public class CreatePhysicalLibraryEndpoint(
 
                 var library = PhysicalLibrary.Create(new LibraryName(req.Name), attemptSources);
 
-                attempContext.Add(library);
-                await attempContext.SaveChangesAsync(attempCt);
-                await transaction.CommitAsync(attempCt);
+                attemptContext.Add(library);
+                await attemptContext.SaveChangesAsync(attemptCt);
+                await transaction.CommitAsync(attemptCt);
 
                 return library.Id;
             }, ct);
