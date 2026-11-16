@@ -1,6 +1,6 @@
 # MediaButler Codex Guidance
 
-MediaButler is a .NET 10 modular monolith for managing media libraries.
+MediaButler is a .NET 11 modular monolith for managing media libraries.
 
 Keep this file concise. Detailed repeatable workflows belong in `.agents/skills/`.
 
